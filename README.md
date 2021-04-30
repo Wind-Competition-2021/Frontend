@@ -1,4 +1,4 @@
-# tqb-frontend 退群杯前端
+# wind-web-frontend
 
 ## 如何部署？
 - clone本项目
