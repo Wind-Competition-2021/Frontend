@@ -1,0 +1,5 @@
+class WindClient {
+    
+}
+
+export {};
