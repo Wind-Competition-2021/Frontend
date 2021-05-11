@@ -4,17 +4,17 @@ import { useDarkMode } from "../state/Util";
 import StockView from "./StockView";
 
 const panes = [
-    { menuItem: "证券", render: () => <Tab.Pane><StockView></StockView></Tab.Pane> }
+    { menuItem: "证券", render: () => <Tab.Pane ><StockView></StockView></Tab.Pane> }
 ]
 
 const MainView: React.FC<{}> = () => {
     const [darkMode] = useDarkMode();
     return <Tab
         menu={{
-            fluid: true, vertical: true, tabular:true
+            pointing: true
         }}
         panes={panes}
-                
+
     >
     </Tab>
 }
