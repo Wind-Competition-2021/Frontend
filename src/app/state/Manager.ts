@@ -15,6 +15,9 @@ const defaultState = {
   viewState: {
     darkModeEnabled: false,
   },
+  dataState: {
+    loaded: false
+  }
 };
 export type StateType = typeof defaultState;
 export interface SimpleAction extends Action<string> {
@@ -28,6 +31,18 @@ export function makeViewStateUpdateAction(viewState: StateType["viewState"]) {
       let result = {
         ...state,
         viewState: viewState,
+      };
+      return result;
+    },
+  } as SimpleAction;
+}
+export function makeDataStateUpdateAction(dataState: StateType["dataState"]) {
+  return {
+    type: "DATASTATE_UPDATE",
+    modify: (state: StateType) => {
+      let result = {
+        ...state,
+        dataState: dataState,
       };
       return result;
     },

@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { makeViewStateUpdateAction, StateType} from "./Manager";
+import { makeViewStateUpdateAction, StateType } from "./Manager";
 
 const useDarkMode = () => {
     const dispatch = useDispatch();
@@ -16,4 +16,9 @@ const useDarkMode = () => {
     return [value, update] as [typeof value, typeof update];
 };
 
-export { useDarkMode };
+const useBasicDataLoaded = () => {
+    const value = useSelector((state: StateType) => state.dataState.loaded);
+    return value;
+};
+
+export { useDarkMode, useBasicDataLoaded };

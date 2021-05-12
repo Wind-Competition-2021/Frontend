@@ -5,9 +5,12 @@ import { Provider } from "react-redux";
 import { store } from "./state/Manager";
 import MainView from "./view/MainView";
 import 'semantic-ui-css/semantic.min.css';
+import { client } from "./client/WindClient";
 const BACKEND_BASE_URL = process.env.REACT_APP_BASE_URL;
 
 const DEBUG_MODE = process.env.NODE_ENV === "development";
+
+client.loadData();
 
 const App: React.FC<{}> = () => {
     return <Container>

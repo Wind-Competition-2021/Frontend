@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 import { BACKEND_BASE_URL, DEBUG_MODE } from "../App";
 import { showErrorModal } from "../dialogs/Dialog";
 import { Config, PriceSummaryList, SingleStockCandleChart, StockBasicInfoList, StockList, WebsocketPacketWrapper } from "./types";
@@ -33,12 +33,8 @@ class WindClient {
     private stockListSocket: WebSocket | null = null;
     private singleStockSocket: WebSocket | null = null;
 
-    private wrappedClient = axios.create({
-        baseURL: BACKEND_BASE_URL,
-    });
-    private vanillaClient = axios.create({
-        baseURL: BACKEND_BASE_URL,
-    });
+    private wrappedClient = axios.create();
+    private vanillaClient = axios.create();
     /**
      * Get the wrapped axios client
      * @returns return the axios client with a default x-auth-token and baseURL
@@ -98,8 +94,11 @@ class WindClient {
      * 
      */
     public async loadData() {
+        this.vanillaClient.defaults.baseURL = BACKEND_BASE_URL;
+        this.wrappedClient.defaults.baseURL = BACKEND_BASE_URL;
+
         const localToken = window.localStorage.getItem("token");
-        const localConfig = JSON.parse(window.localStorage.getItem("config") || "{}");
+        const localConfig: Config | null = JSON.parse(window.localStorage.getItem("config") || "null");
         if (!localToken || !await this.validateToken(localToken)) {
             this.token = await this.requestNewToken();
         } else {
@@ -109,14 +108,16 @@ class WindClient {
             req.headers = { ...req.headers, "x-auth-token": this.token };
             return req;
         });
+        console.log("local config=", localConfig);
         if (localConfig) {
             try {
-                await this.updateConfig(this.config!);
+                await this.updateConfig(localConfig);
+                this.config = localConfig;
             } catch (err) {
                 this.config = await this.requestDefaultConfig();
             }
         } else this.config = await this.requestDefaultConfig();
-
+        await this.updateConfig(this.config!);
         window.localStorage.setItem("token", this.token);
         window.localStorage.setItem("config", JSON.stringify(this.config));
 
@@ -210,6 +211,7 @@ class WindClient {
      * @returns Nothing
      */
     public async updateConfig(config: Config) {
+        console.log("update config", config);
         return (await this.wrappedClient.put("/api/config", config)).data as {};
     }
     /**
@@ -237,6 +239,6 @@ class WindClient {
 }
 
 const client = new WindClient();
-
+(window as (typeof window) & { windClient: WindClient }).windClient = client;
 export { WindClient, client };
 export type { StockListUpdateHandler };

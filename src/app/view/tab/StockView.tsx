@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Button, Container, Dimmer, Loader, Radio } from "semantic-ui-react";
-import { useDarkMode } from "../state/Util";
-import { useDocumentTitle } from "../common/Util";
+import { Button, Dimmer, Loader} from "semantic-ui-react";
+import { useDarkMode } from "../../state/Util";
+import { useDocumentTitle } from "../../common/Util";
 import _ from "lodash";
 import Chart from "react-google-charts";
+
 const StockView: React.FC<{}> = () => {
     const [darkMode, setDarkMode] = useDarkMode();
     useDocumentTitle("主页");
     const [running, setRunning] = useState(false);
-    const [data, setData] = useState<number[]>(_.range(1, 5000));
+    const [data, setData] = useState<number[]>(_.range(1, 5));
     useEffect(() => {
         if (running) {
             let token = setTimeout(() => {
