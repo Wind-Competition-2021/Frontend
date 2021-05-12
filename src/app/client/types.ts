@@ -12,14 +12,17 @@ type StockList = StockListItem[];
 
 interface Config {
     pinnedStocks: string[];//用户置顶股票列表
-    stockListRefreshInterval: number;//股票列表刷新间隔
-    singleStockRefreshInterval: number;//单只股票数据刷新间隔
+    refreshInterval: {
+        single: number;//单只股票数据刷新间隔
+        list: number;//股票列表刷新间隔
+    }
 };
-interface SingleStockTrend {
+interface PriceSummary {
     tradetime: number;//从9:00开始的分钟数
     price: string;//成交均价
     tradecount: string;//成交量
 };
+type PriceSummaryList = PriceSummary[];
 interface SingleStockCandleChartItem {
     date: string;//日期
     open: string;//开盘价
@@ -30,12 +33,27 @@ interface SingleStockCandleChartItem {
     average5: string;//五日均价
 };
 type SingleStockCandleChart = SingleStockCandleChartItem[];
+interface StockBasicInfo {
+    id: string;
+    name: string;
+};
+type StockBasicInfoList = StockBasicInfo[];
+
+interface WebsocketPacketWrapper<T> {
+    ok: boolean;
+    message: string | null | undefined;
+    data: T;
+};
 
 export type {
     Config,
-    SingleStockTrend,
+    PriceSummary,
+    PriceSummaryList,
     SingleStockCandleChart,
     SingleStockCandleChartItem,
     StockList,
-    StockListItem
+    StockListItem,
+    StockBasicInfo,
+    StockBasicInfoList,
+    WebsocketPacketWrapper
 };
