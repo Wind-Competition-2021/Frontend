@@ -7,6 +7,7 @@ interface StockListItem {
     low: string;//最低价
     volume: string;//成交量
     turnover: string;//成交额
+    pinned: boolean;//是否置顶
 };
 type StockList = StockListItem[];
 

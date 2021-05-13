@@ -2,7 +2,7 @@ import React from "react";
 // import axios from "axios";
 import { Container } from "semantic-ui-react";
 import { Provider } from "react-redux";
-import { store } from "./state/Manager";
+import { makeDataStateUpdateAction, store } from "./state/Manager";
 import MainView from "./view/MainView";
 import 'semantic-ui-css/semantic.min.css';
 import { client } from "./client/WindClient";
@@ -10,7 +10,9 @@ const BACKEND_BASE_URL = process.env.REACT_APP_BASE_URL;
 
 const DEBUG_MODE = process.env.NODE_ENV === "development";
 
-client.loadData();
+client.loadData().then(() => {
+    store.dispatch(makeDataStateUpdateAction({ loaded: true }));
+});
 
 const App: React.FC<{}> = () => {
     return <Container>

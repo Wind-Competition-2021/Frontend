@@ -1,6 +1,7 @@
 import React from "react";
-import { Tab } from "semantic-ui-react";
-import { useDarkMode } from "../state/Util";
+import { Loader, Modal, Tab } from "semantic-ui-react";
+import { useBasicDataLoaded } from "../state/Util";
+// import { useDarkMode } from "../state/Util";
 import AnalysisView from "./tab/AnalysisView";
 import StockView from "./tab/StockView";
 
@@ -10,15 +11,27 @@ const panes = [
 ]
 
 const MainView: React.FC<{}> = () => {
-    const [darkMode] = useDarkMode();
-    return <Tab
+    // const [darkMode] = useDarkMode();
+    const loaded = useBasicDataLoaded();
+
+    return loaded ? <Tab
         menu={{
             pointing: true
         }}
         panes={panes}
-
     >
-    </Tab>
+    </Tab> : <>
+        <Modal
+            basic
+            open={true}
+        >
+            <Modal.Content>
+                <Loader active>
+                    加载中...
+                </Loader>
+            </Modal.Content>
+        </Modal>
+    </>
 }
 
 export default MainView;

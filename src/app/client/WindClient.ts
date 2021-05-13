@@ -3,7 +3,7 @@ import { BACKEND_BASE_URL, DEBUG_MODE } from "../App";
 import { showErrorModal } from "../dialogs/Dialog";
 import { Config, PriceSummaryList, SingleStockCandleChart, StockBasicInfoList, StockList, WebsocketPacketWrapper } from "./types";
 import { v4 as uuidv4 } from "uuid";
-import _ from "lodash";
+// import _ from "lodash";
 const axiosErrorHandler = (err: any) => {
     let resp = err.response;
     console.log(resp);
@@ -108,7 +108,7 @@ class WindClient {
             req.headers = { ...req.headers, "x-auth-token": this.token };
             return req;
         });
-        console.log("local config=", localConfig);
+        // console.log("local config=", localConfig);
         if (localConfig) {
             try {
                 await this.updateConfig(localConfig);
@@ -149,9 +149,10 @@ class WindClient {
         if (this.stockListSocket) {
             this.stockListSocket.close();
         }
-        this.stockListSocket = new WebSocket(`/api/ws/stock_list?token=${this.token!}`);
-        this.stockListSocket.onmessage = (msg: MessageEvent<WebsocketPacketWrapper<StockList>>) => {
-            const data = msg.data;
+        this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/stock_list?token=${this.token!}`);
+        this.stockListSocket.onmessage = (msg: MessageEvent<string>) => {
+            const data = JSON.parse(msg.data) as WebsocketPacketWrapper<StockList>;
+
             if (!data.ok) {
                 console.log("Failed to receive stock list update:", data.message);
             } else { this.stockListUpdateHandlers.forEach(f => f(data.data)); }
@@ -166,8 +167,8 @@ class WindClient {
             this.singleStockSocket.close();
         }
         this.singleStockSocket = new WebSocket(`/api/ws/single_stock?token=${this.token!}&stock_id=${stock_id}`);
-        this.singleStockSocket.onmessage = (msg: MessageEvent<WebsocketPacketWrapper<PriceSummaryList>>) => {
-            const data = msg.data;
+        this.singleStockSocket.onmessage = (msg: MessageEvent<string>) => {
+            const data = JSON.parse(msg.data) as WebsocketPacketWrapper<PriceSummaryList>;
             if (!data.ok) {
                 console.log("Failed to receive single stock update:", data.message);
             } else { this.singleStockTrendUpdateHandlers.forEach(f => f(data.data)); }
@@ -211,7 +212,7 @@ class WindClient {
      * @returns Nothing
      */
     public async updateConfig(config: Config) {
-        console.log("update config", config);
+        // console.log("update config", config);
         return (await this.wrappedClient.put("/api/config", config)).data as {};
     }
     /**
@@ -239,6 +240,7 @@ class WindClient {
 }
 
 const client = new WindClient();
-(window as (typeof window) & { windClient: WindClient }).windClient = client;
+if (DEBUG_MODE)
+    (window as (typeof window) & { windClient: WindClient }).windClient = client;
 export { WindClient, client };
 export type { StockListUpdateHandler };

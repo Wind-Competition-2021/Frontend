@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Button, Dimmer, Loader} from "semantic-ui-react";
-import { useDarkMode } from "../../state/Util";
+// import { useDarkMode } from "../../state/Util";
 import { useDocumentTitle } from "../../common/Util";
 import _ from "lodash";
 import Chart from "react-google-charts";
 
 const StockView: React.FC<{}> = () => {
-    const [darkMode, setDarkMode] = useDarkMode();
+    // const [darkMode, setDarkMode] = useDarkMode();
     useDocumentTitle("主页");
     const [running, setRunning] = useState(false);
     const [data, setData] = useState<number[]>(_.range(1, 5));
@@ -20,8 +20,6 @@ const StockView: React.FC<{}> = () => {
         }
     }, [running, data]);
     return <div>
-        {/* <Radio toggle onChange={(_, d) => { setDarkMode(d.checked!) }} checked={darkMode}></Radio>
-        暗色模式: {JSON.stringify(darkMode)} */}
         <Button onClick={() => setRunning(!running)}>{running ? "停止" : "开始"}</Button>
         <Chart
             chartType="Table"
