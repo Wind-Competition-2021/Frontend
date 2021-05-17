@@ -1,7 +1,7 @@
 import axios from "axios";
 import { BACKEND_BASE_URL, DEBUG_MODE } from "../App";
 import { showErrorModal } from "../dialogs/Dialog";
-import { Config, PriceSummaryList, SingleStockCandleChart, StockBasicInfoList, StockList, WebsocketPacketWrapper } from "./types";
+import { Config, PriceSummaryList, SingleStockCandleChart, StockBasicInfo, StockBasicInfoList, StockList, WebsocketPacketWrapper } from "./types";
 import { v4 as uuidv4 } from "uuid";
 // import _ from "lodash";
 const axiosErrorHandler = (err: any) => {
@@ -15,7 +15,7 @@ const axiosErrorHandler = (err: any) => {
         else { showErrorModal(data.message, resp.status + " " + resp.statusText); }
     }
     else
-        showErrorModal(String(err), "发生错误");
+        showErrorModal(String(err), "Error!");
     throw err;
 };
 type DataUpdateHandler<T> = (data: T) => void;
@@ -29,6 +29,7 @@ class WindClient {
     private config: Config | null = null;
     private stockListUpdateHandlers = new Map<string, StockListUpdateHandler>();
     private singleStockTrendUpdateHandlers = new Map<string, SingleStockTrendUpdateHandler>();
+    private stockByID = new Map<String, StockBasicInfo>();
     private stockList: StockBasicInfoList | null = null;
     private stockListSocket: WebSocket | null = null;
     private singleStockSocket: WebSocket | null = null;
@@ -54,6 +55,25 @@ class WindClient {
         this.vanillaClient.interceptors.response.use(r => r, axiosErrorHandler);
 
     }
+    public getStockBasicInfoByID(id: string): StockBasicInfo | undefined {
+        return this.stockByID.get(id);
+    }
+    /**
+     * Get the config object stored in the memory
+     * @returns the config object
+     */
+    public getLocalConfig() {
+        return this.config
+    }
+    /**
+     * Set the config object stored in memory and localStorage
+     * @param config the config object
+     */
+    public setLocalConfig(config: Config): void {
+        this.config = config;
+        window.localStorage.setItem("config", JSON.stringify(config));
+
+    }
     /**
      * Add a listener to handle the change on general stock list
      * @param handler A function, called when changes on the stock list happened.
@@ -76,7 +96,7 @@ class WindClient {
      * @param handler A function, called when changes on the single stock trend happened.
      * @returns A token, which could be used to remove this listener
      */
-    public singleStockTrendUpdateListener(handler: SingleStockTrendUpdateHandler): string {
+    public addSingleStockTrendUpdateListener(handler: SingleStockTrendUpdateHandler): string {
         const id = uuidv4();
         this.singleStockTrendUpdateHandlers.set(id, handler);
         return id;
@@ -111,17 +131,18 @@ class WindClient {
         // console.log("local config=", localConfig);
         if (localConfig) {
             try {
-                await this.updateConfig(localConfig);
+                await this.updateRemoteConfig(localConfig);
                 this.config = localConfig;
             } catch (err) {
                 this.config = await this.requestDefaultConfig();
             }
         } else this.config = await this.requestDefaultConfig();
-        await this.updateConfig(this.config!);
+        await this.updateRemoteConfig(this.config!);
         window.localStorage.setItem("token", this.token);
         window.localStorage.setItem("config", JSON.stringify(this.config));
 
         this.stockList = await this.getStockList();
+        this.stockList.forEach(x => this.stockByID.set(x.id, x));
     }
     /**
      * Search stocks in the basic info list
@@ -174,7 +195,21 @@ class WindClient {
             } else { this.singleStockTrendUpdateHandlers.forEach(f => f(data.data)); }
         };
     }
+    /**
+     * Disconnect the single stock socket
+     */
+    public disconnectSingleStockSocket() {
+        if (this.singleStockSocket) this.singleStockSocket.close();
+    }
+    /**
+     * Update config (both remote and local)
+     * @param config config to update
+     */
+    public async updateConfig(config: Config) {
+        await this.updateRemoteConfig(config);
+        this.setLocalConfig(config);
 
+    }
     /**
      * Request a new token from the server (which could be used to identify a user)
      * @returns A token, should be stored in localStorage.
@@ -202,7 +237,7 @@ class WindClient {
      * @param token Which user's configuration you want 
      * @returns The config stored in the server
      */
-    public async getConfig(token: string): Promise<Config> {
+    public async getRemoteConfig(token: string): Promise<Config> {
         return (await this.vanillaClient.get("/api/config", { params: { tokenId: token } })).data as Config;
     }
     /**
@@ -211,7 +246,7 @@ class WindClient {
      * @param config config to store
      * @returns Nothing
      */
-    public async updateConfig(config: Config) {
+    public async updateRemoteConfig(config: Config) {
         // console.log("update config", config);
         return (await this.wrappedClient.put("/api/config", config)).data as {};
     }
@@ -240,7 +275,6 @@ class WindClient {
 }
 
 const client = new WindClient();
-if (DEBUG_MODE)
-    (window as (typeof window) & { windClient: WindClient }).windClient = client;
+(window as (typeof window) & { windClient: WindClient }).windClient = client;
 export { WindClient, client };
 export type { StockListUpdateHandler };
