@@ -4,7 +4,7 @@ import { convertNumbers, useDocumentTitle } from "../../common/Util";
 import Chart from "react-google-charts";
 import { Container } from "semantic-ui-react";
 import { client } from "../../client/WindClient";
-import { StockList } from "../../client/types";
+import { PriceSummaryList, StockList, StockTrendList } from "../../client/types";
 import { Layout } from "./StockViewLayout";
 import "./StockView.css"
 import { GoogleChartWrapper } from "react-google-charts/dist/types";
@@ -15,6 +15,9 @@ const StockView: React.FC<{}> = () => {
     const [stockList, setStockList] = useState<StockList | null>(null);
     const [currentStock, setCurrentStock] = useState<string | null>(null);
     const [stockListChartWrapper, setStockListChartWrapper] = useState<GoogleChartWrapper | null>(null);
+
+    const [priceSummaryList, setPriceSummaryList] = useState<PriceSummaryList | null>(null);
+    const [stockTrendList, setStockTrendList] = useState<StockTrendList | null>(null);
     useEffect(() => {
         if (loaded) {
             const token = client.addStockListUpdateListener((val) => {
@@ -49,7 +52,9 @@ const StockView: React.FC<{}> = () => {
             client.connectSingleStockSocket(currentStock);
             const token = client.addSingleStockTrendUpdateListener(val => {
                 console.log("single update", val);
+                setStockTrendList(val);
             });
+            client.getPriceSummaryList(currentStock, undefined, undefined).then(resp => setPriceSummaryList(resp));
             return () => {
                 client.removeSingleStockTrendUpdateListener(token);
                 client.disconnectSingleStockSocket();
@@ -60,7 +65,6 @@ const StockView: React.FC<{}> = () => {
         return ({ v: multi10000 ? parseFloat(num) / 10000 : parseInt(num), f: convertNumbers(num, multi10000) });
     }
     const stockListChart = <Chart
-
         getChartWrapper={x => setStockListChartWrapper(x)}
         width={"100%"}
         height={"300px"}

@@ -18,13 +18,19 @@ interface Config {
         list: number;//股票列表刷新间隔
     }
 };
-interface PriceSummary {
+/**
+ * Used to draw a trend line (data from websocket)
+ */
+interface StockTrendItem {
     tradetime: number;//从9:00开始的分钟数
     price: string;//成交均价
     tradecount: string;//成交量
 };
-type PriceSummaryList = PriceSummary[];
-interface SingleStockCandleChartItem {
+type StockTrendList = StockTrendItem[];
+/**
+ * Used to draw a candle chart (data from http)
+ */
+interface PriceSummaryItem {
     date: string;//日期
     open: string;//开盘价
     close: string;//收盘价
@@ -33,7 +39,8 @@ interface SingleStockCandleChartItem {
     volume: string;//成交量
     average5: string;//五日均价
 };
-type SingleStockCandleChart = SingleStockCandleChartItem[];
+type PriceSummaryList = PriceSummaryItem[];
+
 interface StockBasicInfo {
     id: string;
     name: string;
@@ -48,10 +55,10 @@ interface WebsocketPacketWrapper<T> {
 
 export type {
     Config,
-    PriceSummary,
+    StockTrendItem,
+    StockTrendList,
     PriceSummaryList,
-    SingleStockCandleChart,
-    SingleStockCandleChartItem,
+    PriceSummaryItem,
     StockList,
     StockListItem,
     StockBasicInfo,

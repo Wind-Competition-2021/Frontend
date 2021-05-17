@@ -1,9 +1,4 @@
-/* table {
-    table-layout: fixed !important; */
-    /* box-sizing: initial !important;
-    width: 100% !important;
-    max-width: 100% !important;
-} */
+
 table {
     width: 100% !important;
 }

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { BACKEND_BASE_URL, DEBUG_MODE } from "../App";
 import { showErrorModal } from "../dialogs/Dialog";
-import { Config, PriceSummaryList, SingleStockCandleChart, StockBasicInfo, StockBasicInfoList, StockList, WebsocketPacketWrapper } from "./types";
+import { Config,  PriceSummaryList,  StockBasicInfo, StockBasicInfoList, StockList, StockTrendList, WebsocketPacketWrapper } from "./types";
 import { v4 as uuidv4 } from "uuid";
 // import _ from "lodash";
 const axiosErrorHandler = (err: any) => {
@@ -20,7 +20,7 @@ const axiosErrorHandler = (err: any) => {
 };
 type DataUpdateHandler<T> = (data: T) => void;
 type StockListUpdateHandler = DataUpdateHandler<StockList>;
-type SingleStockTrendUpdateHandler = DataUpdateHandler<PriceSummaryList>;
+type SingleStockTrendUpdateHandler = DataUpdateHandler<StockTrendList>;
 
 
 class WindClient {
@@ -189,7 +189,7 @@ class WindClient {
         }
         this.singleStockSocket = new WebSocket(`/api/ws/single_stock?token=${this.token!}&stock_id=${stock_id}`);
         this.singleStockSocket.onmessage = (msg: MessageEvent<string>) => {
-            const data = JSON.parse(msg.data) as WebsocketPacketWrapper<PriceSummaryList>;
+            const data = JSON.parse(msg.data) as WebsocketPacketWrapper<StockTrendList>;
             if (!data.ok) {
                 console.log("Failed to receive single stock update:", data.message);
             } else { this.singleStockTrendUpdateHandlers.forEach(f => f(data.data)); }
@@ -263,14 +263,13 @@ class WindClient {
     // }
     /**
      * Get the price summary of a certain stock.
-     * Such data are usually used to draw a candle chart
      * @param stockId 
      * @param startDate start date of the requested price summary, in format of yyyy-MM-DD, defaults to 30days ago
      * @param endDate end date of the requested price summary, in format of yyyy-MM-DD, defaults to day
      * @returns the price summary
      */
-    public async getPriceSummary(stockId: string, startDate: string | undefined, endDate: string | undefined) {
-        return (await this.wrappedClient.get("/api/stock/price_summary", { params: { id: stockId, startDate: startDate, endDate: endDate } })).data as SingleStockCandleChart;
+    public async getPriceSummaryList(stockId: string, startDate: string | undefined, endDate: string | undefined) {
+        return (await this.wrappedClient.get("/api/stock/price_summary", { params: { id: stockId, startDate: startDate, endDate: endDate } })).data as PriceSummaryList;
     }
 }
 
