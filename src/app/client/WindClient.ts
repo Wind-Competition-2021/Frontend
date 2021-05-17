@@ -1,7 +1,7 @@
 import axios from "axios";
 import { BACKEND_BASE_URL, DEBUG_MODE } from "../App";
 import { showErrorModal } from "../dialogs/Dialog";
-import { Config,  PriceSummaryList,  StockBasicInfo, StockBasicInfoList, StockList, StockTrendList, WebsocketPacketWrapper } from "./types";
+import { Config, PriceSummaryList, StockBasicInfo, StockBasicInfoList, StockList, StockTrendList, WebsocketPacketWrapper } from "./types";
 import { v4 as uuidv4 } from "uuid";
 // import _ from "lodash";
 const axiosErrorHandler = (err: any) => {
@@ -64,6 +64,9 @@ class WindClient {
      */
     public getLocalConfig() {
         return this.config
+    }
+    public getLocalStockBasicInfoList() {
+        return this.stockList!;
     }
     /**
      * Set the config object stored in memory and localStorage
@@ -187,7 +190,7 @@ class WindClient {
         if (this.singleStockSocket) {
             this.singleStockSocket.close();
         }
-        this.singleStockSocket = new WebSocket(`/api/ws/single_stock?token=${this.token!}&stock_id=${stock_id}`);
+        this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/single_stock?token=${this.token!}&stock_id=${stock_id}`);
         this.singleStockSocket.onmessage = (msg: MessageEvent<string>) => {
             const data = JSON.parse(msg.data) as WebsocketPacketWrapper<StockTrendList>;
             if (!data.ok) {
