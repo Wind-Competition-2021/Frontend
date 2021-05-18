@@ -12,7 +12,8 @@ const useDocumentTitle: (title: string) => void = (title: string) => {
     }, [title]);
 };
 
-const convertNumbers = function (val: string, multi10000 = false) {
+const convertNumbers = function (valx: number, multi10000 = false) {
+    const val = valx.toString();
     if (multi10000) {
         //180000.0000 len=10
         const result = _.trimEnd((val.slice(0, val.length - 4) + "." + val.slice(val.length - 4)), "0");

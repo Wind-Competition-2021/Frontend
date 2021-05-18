@@ -1,7 +1,7 @@
 import axios from "axios";
 import { BACKEND_BASE_URL, DEBUG_MODE } from "../App";
 import { showErrorModal } from "../dialogs/Dialog";
-import { Config, PriceSummaryList, StockBasicInfo, StockBasicInfoList, StockList, StockTrendList, WebsocketPacketWrapper } from "./types";
+import { Config, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockTrendList, WebsocketPacketWrapper } from "./types";
 import { v4 as uuidv4 } from "uuid";
 // import _ from "lodash";
 const axiosErrorHandler = (err: any) => {
@@ -261,18 +261,89 @@ class WindClient {
     public async getStockList(): Promise<StockBasicInfoList> {
         return (await this.vanillaClient.get("/api/stock/list")).data as StockBasicInfoList;
     }
-    // public async doStockSearch(keyword: string) {
-    //     return (await this.wrappedClient.get("/api/search_stock", { params: { keyword: keyword } })).data as StockList;
+    // /**
+    //  * Get the price summary of a certain stock.
+    //  * @param stockId 
+    //  * @param startDate start date of the requested price summary, in format of yyyy-MM-DD, defaults to 30days ago
+    //  * @param endDate end date of the requested price summary, in format of yyyy-MM-DD, defaults to day
+    //  * @returns the price summary
+    //  */
+    // public async getPriceSummaryList(stockId: string, startDate: string | undefined, endDate: string | undefined) {
+    //     return (await this.wrappedClient.get("/api/stock/price_summary", { params: { id: stockId, startDate: startDate, endDate: endDate } })).data as RealTimeDataByDay[];
     // }
     /**
-     * Get the price summary of a certain stock.
-     * @param stockId 
-     * @param startDate start date of the requested price summary, in format of yyyy-MM-DD, defaults to 30days ago
-     * @param endDate end date of the requested price summary, in format of yyyy-MM-DD, defaults to day
-     * @returns the price summary
+     * Get the detail of a stock
+     * @param id stock id
+     * @returns the detailed info
      */
-    public async getPriceSummaryList(stockId: string, startDate: string | undefined, endDate: string | undefined) {
-        return (await this.wrappedClient.get("/api/stock/price_summary", { params: { id: stockId, startDate: startDate, endDate: endDate } })).data as PriceSummaryList;
+    public async getStockDetailedInfo(id: string): Promise<StockInfo> {
+        return (await this.vanillaClient.get("/api/stock/info", { params: { id: id } })).data as StockInfo;
+    }
+    /**
+     * Get real time data by minute 
+     * @param id Stock id
+     * @param beginDate begin date
+     * @param endDate end date
+     * @param frequency frequency by minute, 5, 15, 30 or 60, default to 60
+     * @param rehabilitation `pre`, `post` or `none`
+     * @returns 
+     */
+    public async getStockMinuteHistory(
+        id: string,
+        beginDate?: string,
+        endDate?: string,
+        frequency?: string,
+        rehabilitation?: RehabilitationType
+    ) {
+        return (await this.vanillaClient.get("/api/quote/history/minute", {
+            params: {
+                id: id,
+                "begin-date": beginDate,
+                "end-date": endDate,
+                frequency: frequency,
+                rehabilitation: rehabilitation
+            }
+        })) as RealTimeDataByMinute[];
+    };
+    /**
+     * Get real time data by day
+     * @param id stock id
+     * @param beginDate begin date
+     * @param endDate end date
+     * @param rehabilitation `pre`, `post` or `none`
+     * @returns 
+     */
+    public async getStockDayHistory(
+        id: string,
+        beginDate?: string,
+        endDate?: string,
+        rehabilitation?: RehabilitationType
+    ) {
+        return (await this.vanillaClient.get("/api/quote/history/day", {
+            params: {
+                id: id,
+                "begin-date": beginDate,
+                "end-date": endDate,
+                rehabilitation: rehabilitation
+            }
+        })) as RealTimeDataByDay[];
+    }
+    public async getStockWeekHistory(
+        id: string,
+        beginDate?: string,
+        endDate?: string,
+        frequency?: "week" | "month",
+        rehabilitation?: RehabilitationType
+    ) {
+        return (await this.vanillaClient.get("/api/quote/history/week", {
+            params: {
+                id: id,
+                "begin-date": beginDate,
+                "end-date": endDate,
+                frequency: frequency,
+                rehabilitation: rehabilitation
+            }
+        })) as RealTimeDataByWeek[];
     }
 }
 

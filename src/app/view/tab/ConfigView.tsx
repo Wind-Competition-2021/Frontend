@@ -23,7 +23,7 @@ const ConfigView: React.FC<{}> = () => {
         showSuccessModal("操作完成");
     };
     return <div>
-        {loaded && <>
+        {loaded && config && <>
 
             <Grid columns="2">
                 <Grid.Column width="4">
