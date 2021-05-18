@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { makeCurrentStockAction } from "../../../state/Manager";
+import StockCandleChart from "./StockCandleChart";
 const StockView: React.FC<{}> = () => {
     useDocumentTitle("证券");
     /**
@@ -55,7 +56,7 @@ const StockView: React.FC<{}> = () => {
                 console.log("single update", val);
                 setStockTrendList(val);
             });
-            // client.getPriceSummaryList(currentStock, undefined, undefined).then(resp => setPriceSummaryList(resp));
+            client.getStockDayHistory(currentStock).then(resp => setRealTimeDataByDay(resp));
             return () => {
                 client.removeSingleStockTrendUpdateListener(token);
                 client.disconnectSingleStockSocket();
@@ -95,7 +96,9 @@ const StockView: React.FC<{}> = () => {
             <Divider></Divider>
             <Layout
                 name="default"
-                candleChart={<div></div>}
+                candleChart={realTimeDataByDay ? <StockCandleChart
+                    data={realTimeDataByDay}
+                ></StockCandleChart> : <div></div>}
                 singleTrend={<div></div>}
                 stockList={<StockListChart
                     currentStock={currentStock!}

@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
-import { Grid, Form, Dimmer, Loader, Divider, Table, Header } from "semantic-ui-react";
-import { RealTimeDataByDay, RealTimeDataByWeek, RehabilitationType, StockInfo } from "../../../client/types";
-import { client } from "../../../client/WindClient";
-import { convertNumbers, toDateString, unwrapPercent, useDocumentTitle } from "../../../common/Util";
-import StockCandleChart from "../stock/StockCandleChart";
-import AnalysisStockSearch from "./AnalysisStockSearch";
+import { Grid, Form, Dimmer, Loader, Divider } from "semantic-ui-react";
+import { RealTimeDataByDay, RealTimeDataByWeek, RehabilitationType, StockInfo } from "../../../../client/types";
+import { client } from "../../../../client/WindClient";
+import { toDateString, useDocumentTitle } from "../../../../common/Util";
+import AnalysisStockSearch from "../AnalysisStockSearch";
 import { DateTime } from "luxon";
 import 'react-day-picker/lib/style.css';
 import DayPickerInput from "react-day-picker/DayPickerInput"
+import QuoteAnalysisStockDetail from "./QuoteAnalysisStockDetail";
+import QuoteAnalysisStockChart from "./QuoteAnalysisStockChart";
 const QuoteAnalysisView: React.FC<{
 }> = () => {
     useDocumentTitle("分析");
@@ -95,90 +96,12 @@ const QuoteAnalysisView: React.FC<{
                         </Form.Group>
                     </Form>
                     <Divider></Divider>
-                    <Table>
-                        <Table.Header>
-                            <Table.Row>
-                                <Table.HeaderCell>
-                                    股票代码
-                                </Table.HeaderCell>
-                                <Table.HeaderCell>
-                                    股票名
-                                </Table.HeaderCell>
-                                <Table.HeaderCell>
-                                    股票类型
-                                </Table.HeaderCell>
-                                <Table.HeaderCell>
-                                    行业
-                                </Table.HeaderCell>
-                                <Table.HeaderCell>
-                                    分类
-                                </Table.HeaderCell>
-                                <Table.HeaderCell>
-                                    上市日期
-                                </Table.HeaderCell>
-                                <Table.HeaderCell>
-                                    退市日期
-                                </Table.HeaderCell>
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            <Table.Row>
-                                <Table.Cell>{stockInfo.id}</Table.Cell>
-                                <Table.Cell>{stockInfo.name}</Table.Cell>
-                                <Table.Cell>{{ index: "指数", stock: "股票" }[stockInfo.type]}</Table.Cell>
-                                <Table.Cell>{stockInfo.industry}</Table.Cell>
-                                <Table.Cell>{stockInfo.classification}</Table.Cell>
-                                <Table.Cell>{stockInfo.listedDate}</Table.Cell>
-                                <Table.Cell>{stockInfo.delistedDate}</Table.Cell>
-                            </Table.Row>
-                        </Table.Body>
-                    </Table>
+                    <QuoteAnalysisStockDetail stockInfo={stockInfo}></QuoteAnalysisStockDetail>
                     <Divider></Divider>
-                    <Grid columns="1">
-                        <Grid.Column>
-                            <Header as="h4">
-                                日K线数据
-                            </Header>
-                            <StockCandleChart data={realTimeDataByDay}></StockCandleChart>
-                        </Grid.Column>
-                        <Grid.Column>
-                            <Header as="h4">
-                                周数据
-                            </Header>
-                            <div style={{ overflowY: "scroll", height: "300px" }}>
-                                <Table>
-                                    <Table.Header>
-                                        <Table.Row>
-                                            <Table.HeaderCell>日期</Table.HeaderCell>
-                                            <Table.HeaderCell>开盘价</Table.HeaderCell>
-                                            <Table.HeaderCell>收盘价</Table.HeaderCell>
-                                            <Table.HeaderCell>最高价</Table.HeaderCell>
-                                            <Table.HeaderCell>最低价</Table.HeaderCell>
-                                            <Table.HeaderCell>成交量</Table.HeaderCell>
-                                            <Table.HeaderCell>成交额</Table.HeaderCell>
-                                            <Table.HeaderCell>换手率</Table.HeaderCell>
-                                        </Table.Row>
-                                    </Table.Header>
-                                    <Table.Body>
-                                        {realTimeDataByWeek.map((item, i) => (
-                                            <Table.Row key={i}>
-                                                {[
-                                                    item.date,
-                                                    convertNumbers(item.opening, true),
-                                                    convertNumbers(item.closing, true),
-                                                    convertNumbers(item.highest, true),
-                                                    convertNumbers(item.lowest, true),
-                                                    convertNumbers(item.volume, false),
-                                                    convertNumbers(item.turnover, true),
-                                                    unwrapPercent(item.turnoverRate).display
-                                                ].map((val, j) => <Table.Cell key={j}>{val}</Table.Cell>)}
-                                            </Table.Row>
-                                        ))}
-                                    </Table.Body>
-                                </Table>
-                            </div>
-                        </Grid.Column>
-                    </Grid>
+                    <QuoteAnalysisStockChart
+                        realTimeDataByDay={realTimeDataByDay}
+                        realTimeDataByWeek={realTimeDataByWeek}
+                    ></QuoteAnalysisStockChart>
                     <Divider></Divider>
                     <Form>
                         <Form.Group>

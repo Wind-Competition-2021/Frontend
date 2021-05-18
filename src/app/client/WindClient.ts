@@ -128,7 +128,7 @@ class WindClient {
             this.token = localToken;
         }
         this.wrappedClient.interceptors.request.use(req => {
-            req.headers = { ...req.headers, "x-auth-token": this.token };
+            req.headers = { ...req.headers, "Token": this.token };
             return req;
         });
         // console.log("local config=", localConfig);
@@ -140,7 +140,7 @@ class WindClient {
                 this.config = await this.requestDefaultConfig();
             }
         } else this.config = await this.requestDefaultConfig();
-        await this.updateRemoteConfig(this.config!);
+        // await this.updateRemoteConfig(this.config!);
         window.localStorage.setItem("token", this.token);
         window.localStorage.setItem("config", JSON.stringify(this.config));
 
@@ -226,7 +226,7 @@ class WindClient {
      * @returns true if the token is valid, otherwise false
      */
     public async validateToken(token: string): Promise<boolean> {
-        return (await this.vanillaClient.get("/api/token/validation", { params: { tokenId: token } })).data as boolean;
+        return (await this.vanillaClient.get("/api/token/validation", { params: { token: token } })).data as boolean;
     }
     /**
      * Obtain a copy of the default configuration from the server.

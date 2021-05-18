@@ -4,16 +4,8 @@ import {
 } from "semantic-ui-react";
 import { StockList, StockListItem } from "../../../client/types";
 import { client } from "../../../client/WindClient";
-import { convertNumbers } from "../../../common/Util";
-/**
- * 拆包一个字符串表示的数，返回其浮点值和字符串表示的精确值
- * @param num 数字
- * @param multi10000 这个数字是否是乘过10000的
- * @returns 
- */
-const unwrapNumber = (num: number, multi10000 = false) => {
-    return ({ value: multi10000 ? num / 10000 : num, display: convertNumbers(num, multi10000) });
-}
+import { convertNumbers, unwrapNumber } from "../../../common/Util";
+
 /**
  * 渲染股票总信息上的一行
  * @param item 

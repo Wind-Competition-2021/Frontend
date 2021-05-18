@@ -38,16 +38,27 @@ const toDateString = (date: Date) => {
 };
 
 const unwrapPercent = (val: string) => {
-    const head = val.substr(0, 3);
-    const tail = val.substr(3, 3);
+    const negative = val[0] === '-';
+    if (negative) val = val.substr(1);
+
+    const head = val.substr(0, 2);
+    const tail = val.substr(2);
     return {
-        value: parseFloat(val) / 1e5,
-        display: `${head}.${tail}%`
+        value: parseFloat(val) / 1e6,
+        display: `${negative ? '-' : ''}${head}.${tail}%`
     };
 
 };
-
+/**
+ * 拆包一个字符串表示的数，返回其浮点值和字符串表示的精确值
+ * @param num 数字
+ * @param multi10000 这个数字是否是乘过10000的
+ * @returns 
+ */
+const unwrapNumber = (num: number, multi10000 = false) => {
+    return ({ value: multi10000 ? num / 10000 : num, display: convertNumbers(num, multi10000) });
+}
 // (window as (typeof window) & {f:any}).f=convertNumbers;
-export { useDocumentTitle, convertNumbers, useInputValue, toDateString, unwrapPercent };
+export { useDocumentTitle, convertNumbers, useInputValue, toDateString, unwrapPercent, unwrapNumber };
 
 export type { onChangeType }
