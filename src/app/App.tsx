@@ -13,7 +13,7 @@ const BACKEND_BASE_URL = process.env.REACT_APP_BASE_URL;
 const DEBUG_MODE = process.env.NODE_ENV === "development";
 
 client.loadData().then(() => {
-    store.dispatch(makeDataStateUpdateAction({ loaded: true }));
+    store.dispatch(makeDataStateUpdateAction({ loaded: true, currentStock: "" }));
     client.connectStockListSocket();
 });
 

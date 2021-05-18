@@ -303,7 +303,7 @@ class WindClient {
                 frequency: frequency,
                 rehabilitation: rehabilitation
             }
-        })) as RealTimeDataByMinute[];
+        })).data as RealTimeDataByMinute[];
     };
     /**
      * Get real time data by day
@@ -326,7 +326,7 @@ class WindClient {
                 "end-date": endDate,
                 rehabilitation: rehabilitation
             }
-        })) as RealTimeDataByDay[];
+        })).data as RealTimeDataByDay[];
     }
     public async getStockWeekHistory(
         id: string,
@@ -343,7 +343,7 @@ class WindClient {
                 frequency: frequency,
                 rehabilitation: rehabilitation
             }
-        })) as RealTimeDataByWeek[];
+        })).data as RealTimeDataByWeek[];
     }
 }
 

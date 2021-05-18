@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Table, Button, Checkbox } from "semantic-ui-react";
-import { StockBasicInfo } from "../../client/types";
-import { client } from "../../client/WindClient";
+import { StockBasicInfo } from "../../../client/types";
+import { client } from "../../../client/WindClient";
 const StockViewSearchModal: React.FC<{
     showingSearchModal: boolean;
     matchedStocks: StockBasicInfo[];

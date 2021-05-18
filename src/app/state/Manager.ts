@@ -2,21 +2,13 @@ import { createStore, Action } from "redux";
 // import { UserInfoType } from "../service/User";
 
 const defaultState = {
-  // userState: {
-  //     login: false,
-  //     userData: ({
-  //         username: "",
-  //         email: "",
-  //     } as UserInfoType)
-  // },
-  // dataState: {
-  //     loaded: false
-  // }
+
   viewState: {
     darkModeEnabled: false,
   },
   dataState: {
-    loaded: false
+    loaded: false,
+    currentStock: ""
   }
 };
 export type StateType = typeof defaultState;
@@ -43,6 +35,21 @@ export function makeDataStateUpdateAction(dataState: StateType["dataState"]) {
       let result = {
         ...state,
         dataState: dataState,
+      };
+      return result;
+    },
+  } as SimpleAction;
+}
+export function makeCurrentStockAction(id: string) {
+  return {
+    type: "DATASTATE_UPDATE",
+    modify: (state: StateType) => {
+      let result = {
+        ...state,
+        dataState: {
+          ...state.dataState,
+          currentStock: id
+        },
       };
       return result;
     },
