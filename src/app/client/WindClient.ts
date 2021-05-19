@@ -1,8 +1,9 @@
 import axios from "axios";
 import { BACKEND_BASE_URL, DEBUG_MODE } from "../App";
 import { showErrorModal } from "../dialogs/Dialog";
-import { Config, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockTrendList, WebsocketPacketWrapper } from "./types";
+import { Config, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockTrendList } from "./types";
 import { v4 as uuidv4 } from "uuid";
+import { Balance, CashFlow, DateIntervalDataBundle, Dupond, Forcast, Growth, Operation, Profit, QuarterDataBundle, Report } from "./statement-types";
 // import _ from "lodash";
 const axiosErrorHandler = (err: any) => {
     let resp = err.response;
@@ -173,13 +174,14 @@ class WindClient {
         if (this.stockListSocket) {
             this.stockListSocket.close();
         }
-        this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/stock_list?token=${this.token!}`);
+        this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/stock/list?token=${this.token!}`);
         this.stockListSocket.onmessage = (msg: MessageEvent<string>) => {
-            const data = JSON.parse(msg.data) as WebsocketPacketWrapper<StockList>;
+            this.stockListUpdateHandlers.forEach(f => f(JSON.parse(msg.data) as StockList));
+            // const data = JSON.parse(msg.data) as WebsocketPacketWrapper<StockList>;
 
-            if (!data.ok) {
-                console.log("Failed to receive stock list update:", data.message);
-            } else { this.stockListUpdateHandlers.forEach(f => f(data.data)); }
+            // if (!data.ok) {
+            //     console.log("Failed to receive stock list update:", data.message);
+            // } else { this.stockListUpdateHandlers.forEach(f => f(data.data)); }
         };
     }
     /**
@@ -190,12 +192,13 @@ class WindClient {
         if (this.singleStockSocket) {
             this.singleStockSocket.close();
         }
-        this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/single_stock?token=${this.token!}&stock_id=${stock_id}`);
+        this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/stock?token=${this.token!}&stock_id=${stock_id}`);
         this.singleStockSocket.onmessage = (msg: MessageEvent<string>) => {
-            const data = JSON.parse(msg.data) as WebsocketPacketWrapper<StockTrendList>;
-            if (!data.ok) {
-                console.log("Failed to receive single stock update:", data.message);
-            } else { this.singleStockTrendUpdateHandlers.forEach(f => f(data.data)); }
+            this.singleStockTrendUpdateHandlers.forEach(f => f(JSON.parse(msg.data) as StockTrendList));
+            // const data = JSON.parse(msg.data) as WebsocketPacketWrapper<StockTrendList>;
+            // if (!data.ok) {
+            //     console.log("Failed to receive single stock update:", data.message);
+            // } else { this.singleStockTrendUpdateHandlers.forEach(f => f(data.data)); }
         };
     }
     /**
@@ -345,6 +348,45 @@ class WindClient {
             }
         })).data as RealTimeDataByWeek[];
     }
+    /**
+     * Get finicial statement of a certain stock in a certain quarter
+     * @param id stock id
+     * @param year year
+     * @param quarter quarter, `1`, `2`, `3` or `4`
+     * @returns The data
+     */
+    public async getQuarterStockStatement(id: string, year?: number, quarter?: 1 | 2 | 3 | 4): Promise<QuarterDataBundle> {
+        const wrapURL = (s: string) => `/api/statement/${s}`;
+        let resp = (await axios.all([
+            "profit", "operation", "growth", "balance", "cash-flow", "dupond"
+        ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, year: year, quarter: quarter } }))));
+        return {
+            profit: resp[0] as Profit,
+            operation: resp[1] as Operation,
+            growth: resp[2] as Growth,
+            balance: resp[3] as Balance,
+            cashFlow: resp[4] as CashFlow,
+            dupond: resp[5] as Dupond
+        };
+    }
+    /**
+     * Get finicial statement of a certain stock in a certain date range
+     * @param id Stock id
+     * @param beginDate begin date, in format of `yyyy-mm-dd`, default to today
+     * @param endDate end date, in format of `yyyy-mm-dd`
+     * @returns 
+     */
+    public async getDateIntervalStockStatement(id: string, beginDate?: string, endDate?: string): Promise<DateIntervalDataBundle> {
+        const wrapURL = (s: string) => `/api/statement/${s}`;
+        let resp = (await axios.all([
+            "report", "forcast"
+        ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, "begin-date": beginDate, "end-date": endDate } }))));
+        return {
+            report: resp[0] as Report,
+            forcast: resp[1] as Forcast
+        };
+    }
+
 }
 
 const client = new WindClient();

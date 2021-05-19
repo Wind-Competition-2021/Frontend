@@ -34,7 +34,7 @@ const useInputValue: (text?: string) => { value: string; onChange: onChangeType 
 };
 
 const toDateString = (date: Date) => {
-    return DateTime.fromJSDate(date).toFormat("YYYY-MM-DD");
+    return DateTime.fromJSDate(date).toFormat("yyyy-MM-dd");
 };
 
 const unwrapPercent = (val: string) => {

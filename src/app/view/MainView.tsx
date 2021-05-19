@@ -6,9 +6,11 @@ import QuoteAnalysisView from "./tab/analysis/quote/QuoteAnalysisView";
 import StockView from "./tab/stock/StockView";
 import ConfigView from "./tab/ConfigView";
 import StatementAnalysisView from "./tab/analysis/StatementAnalysisView";
-import StockCandleChart from "./tab/stock/StockCandleChart";
-import { RehabilitationType } from "../client/types";
-import _ from "lodash";
+// import StockCandleChart from "./tab/stock/StockCandleChart";
+// import { RehabilitationType, StockTrendList } from "../client/types";
+// import _ from "lodash";
+// import { DateTime } from "luxon";
+// import SingleStockTrendChart from "./tab/stock/SingleStockTrendChart";
 const panes = [
     { menuItem: "证券", render: () => <Tab.Pane><StockView></StockView></Tab.Pane> },
     { menuItem: "行情分析", render: () => <Tab.Pane><QuoteAnalysisView></QuoteAnalysisView></Tab.Pane> },
@@ -19,7 +21,16 @@ const panes = [
 const MainView: React.FC<{}> = () => {
     // const [darkMode] = useDarkMode();
     const loaded = useBasicDataLoaded();
-
+    // const closings = _.times(50, () => Math.floor(Math.random() * 10000 * 100));
+    // const data = _.zip(closings, [0, ..._.initial(closings)]).map(([a, b], i) => ({
+    //     preClosing: b, closing: a,
+    //     time: DateTime.now().plus({ minute: i }).toISO(),
+    //     volume: _.random(1, 1000, false)
+    // })) as StockTrendList;
+    // console.log(data);
+    // return <SingleStockTrendChart
+    //     data={data}
+    // ></SingleStockTrendChart>
     // return <StockCandleChart
     //     data={[
     //         {

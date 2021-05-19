@@ -35,7 +35,7 @@ const StockCandleChart: React.FC<{
      */
     const average5Data = prefixSum.map((x, i) => (x - (i <= 4 ? 0 : prefixSum[i - 5])) / (i <= 4 ? (i + 1) : 5));
     const volumeData = data.map(item => item.volume);
-    const combinedData = _.zip(candleChartData, average5Data, volumeData).map(([a, b, c]) => [...a!, b, c]);
+    const combinedData = _.zip(candleChartData, average5Data, volumeData).map(([a, b, c]) => [...a!, `最低: ${a![1].f}<br>开盘: ${a![2].f}<br>收盘: ${a![2].f}<br>最高: ${a![3].f}`, b, c, (a![2].v <= a![3].v) ? "stroke-color:red;fill-color:red;fill-opacity:0.4" : "fill-color:blue"]);
     const colorModifier = () => {
         document.querySelectorAll("rect[width='2']").forEach(item => {
             // console.log("modify", item);
@@ -51,10 +51,13 @@ const StockCandleChart: React.FC<{
         className="my-chart"
         chartType="ComboChart"
         data={[
-            ["日期", "价格", "开盘价", "收盘价", "最高价", "五日均价", "成交量"],
+            ["日期", "价格", "开盘价", "收盘价", "最高价", { role: "tooltip", type: "string", p: { html: true } }, "五日均价", "成交量", { role: "style" }],
             ...combinedData
         ]}
         options={{
+            tooltip: {
+                isHtml: true
+            },
             hAxis: { title: "日期" },
             seriesType: "candlesticks",
             series: {

@@ -54,9 +54,16 @@ const QuoteAnalysisView: React.FC<{
         if (currentStock) {
             (async () => {
                 setLoading(true);
-                setStockInfo(await client.getStockDetailedInfo(currentStock));
-                await applyDate(false);
-                setLoading(false);
+                try {
+                    setStockInfo(await client.getStockDetailedInfo(currentStock));
+                    await applyDate(false);
+
+                } catch (e) {
+                    throw e;
+                } finally {
+                    setLoading(false);
+
+                }
             })();
         }
         // eslint-disable-next-line

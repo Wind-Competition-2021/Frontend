@@ -12,6 +12,7 @@ import { useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { makeCurrentStockAction } from "../../../state/Manager";
 import StockCandleChart from "./StockCandleChart";
+import SingleStockTrendChart from "./SingleStockTrendChart";
 const StockView: React.FC<{}> = () => {
     useDocumentTitle("证券");
     /**
@@ -29,7 +30,7 @@ const StockView: React.FC<{}> = () => {
     /**
      * 用以展示实时情况
      */
-    const [realStockTrendList, setStockTrendList] = useState<StockTrendList | null>(null);
+    const [stockTrendList, setStockTrendList] = useState<StockTrendList | null>(null);
     const [searchText, setSearchText] = useState("");
     const [showingSearchModal, setShowingSearchModal] = useState(false);
     const [matchedStocks, setMatchedStocks] = useState<(StockBasicInfo)[]>([]);
@@ -96,10 +97,16 @@ const StockView: React.FC<{}> = () => {
             <Divider></Divider>
             <Layout
                 name="default"
-                candleChart={realTimeDataByDay ? <StockCandleChart
-                    data={realTimeDataByDay}
-                ></StockCandleChart> : <div></div>}
-                singleTrend={<div></div>}
+                candleChart={
+                    realTimeDataByDay ? <StockCandleChart
+                        data={realTimeDataByDay}
+                    ></StockCandleChart> : <div></div>
+                }
+                singleTrend={
+                    stockTrendList ? <SingleStockTrendChart
+                        data={stockTrendList}
+                    ></SingleStockTrendChart> : <div></div>
+                }
                 stockList={<StockListChart
                     currentStock={currentStock!}
                     setCurrentStock={(x) => {

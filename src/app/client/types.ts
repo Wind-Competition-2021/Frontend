@@ -120,6 +120,7 @@ interface StockListItem extends RealTimeDataByMinute {
 };
 type StockList = StockListItem[];
 
+
 export type {
     Config,
     StockTrendItem,

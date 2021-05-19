@@ -5,26 +5,26 @@ import AnalysisStockSearch from "./AnalysisStockSearch";
 
 const StatementAnalysisView: React.FC<{
 }> = () => {
-        useDocumentTitle("分析");
-        /**
-         * 当前要分析的股票
-         */
-        const [currentStock, setCurrentStock] = useState<string | null>(null);
+    useDocumentTitle("分析");
+    /**
+     * 当前要分析的股票
+     */
+    const [currentStock, setCurrentStock] = useState<string | null>(null);
 
 
-        return <Grid columns="2">
-            <Grid.Column width="4">
-                <AnalysisStockSearch
-                    setSelectedStock={setCurrentStock}
-                ></AnalysisStockSearch>
-            </Grid.Column>
-            <Grid.Column>
-                {!currentStock ? <div></div> : <div>
+    return <Grid columns="2">
+        <Grid.Column width="6">
+            <AnalysisStockSearch
+                setSelectedStock={setCurrentStock}
+            ></AnalysisStockSearch>
+        </Grid.Column>
+        <Grid.Column width="10">
+            {!currentStock ? <div></div> : <div>
 
-                </div>}
-            </Grid.Column>
-        </Grid>;
-    };
+            </div>}
+        </Grid.Column>
+    </Grid>;
+};
 
 export default StatementAnalysisView;
 
