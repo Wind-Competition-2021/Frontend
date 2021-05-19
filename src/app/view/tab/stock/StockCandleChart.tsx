@@ -20,7 +20,7 @@ const StockCandleChart: React.FC<{
      * 用于绘制K线图
      */
     const candleChartData: CandleChartEntry[] = data.map(item => [
-        DateTime.fromFormat(item.date, "yyyy-MM-dd").toFormat("MM/dd"),
+        DateTime.fromISO(item.date).toFormat("MM/dd"),
         myUnwrapNumber(item.lowest, true),
         myUnwrapNumber(item.opening, true),
         myUnwrapNumber(item.closing, true),
@@ -48,6 +48,8 @@ const StockCandleChart: React.FC<{
         });
     };
     return <Chart
+        // width="500px"
+        // height="300px "
         className="my-chart"
         chartType="ComboChart"
         data={[
@@ -100,7 +102,7 @@ const StockCandleChart: React.FC<{
                         color: "transparent"
                     },
                     viewWindow: {
-                        max: _.max(combinedData.map(_.last)) as number * 4
+                        max: _.max(combinedData.map(_.last)) as number * 5
                     }
                 }
             }

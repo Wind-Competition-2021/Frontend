@@ -9,6 +9,9 @@ const defaultState = {
   dataState: {
     loaded: false,
     currentStock: ""
+  },
+  stockState: {
+    tradingTime: false
   }
 };
 export type StateType = typeof defaultState;
@@ -35,6 +38,18 @@ export function makeDataStateUpdateAction(dataState: StateType["dataState"]) {
       let result = {
         ...state,
         dataState: dataState,
+      };
+      return result;
+    },
+  } as SimpleAction;
+}
+export function makeStockStateUpdateAction(stockState: StateType["stockState"]) {
+  return {
+    type: "STOCKSTATE_UPDATE",
+    modify: (state: StateType) => {
+      let result = {
+        ...state,
+        stockState: stockState,
       };
       return result;
     },

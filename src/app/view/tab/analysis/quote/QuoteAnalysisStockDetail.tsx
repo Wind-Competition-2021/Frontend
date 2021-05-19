@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import React from "react";
 import { Table } from "semantic-ui-react";
 import { StockInfo } from "../../../../client/types";
@@ -36,8 +37,8 @@ const QuoteAnalysisStockDetail: React.FC<{ stockInfo: StockInfo }> = ({ stockInf
                 <Table.Cell>{{ index: "指数", stock: "股票" }[stockInfo.type]}</Table.Cell>
                 <Table.Cell>{stockInfo.industry}</Table.Cell>
                 <Table.Cell>{stockInfo.classification}</Table.Cell>
-                <Table.Cell>{stockInfo.listedDate}</Table.Cell>
-                <Table.Cell>{stockInfo.delistedDate}</Table.Cell>
+                <Table.Cell>{DateTime.fromISO(stockInfo.listedDate).toFormat("yyyy-MM-dd")}</Table.Cell>
+                <Table.Cell>{stockInfo.delistedDate && DateTime.fromISO(stockInfo.delistedDate).toFormat("yyyy-MM-dd")}</Table.Cell>
             </Table.Row>
         </Table.Body>
     </Table>;

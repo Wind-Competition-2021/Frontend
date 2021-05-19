@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import React from "react";
 import { Grid, Header, Table } from "semantic-ui-react";
 import { RealTimeDataByDay, RealTimeDataByWeek } from "../../../../client/types";
@@ -40,7 +41,7 @@ const QuoteAnalysisStockChart: React.FC<{
                             {realTimeDataByWeek.map((item, i) => (
                                 <Table.Row key={i}>
                                     {[
-                                        item.date,
+                                        DateTime.fromISO(item.date).toFormat("yyyy-MM-dd"),
                                         convertNumbers(item.opening, true),
                                         convertNumbers(item.closing, true),
                                         convertNumbers(item.highest, true),

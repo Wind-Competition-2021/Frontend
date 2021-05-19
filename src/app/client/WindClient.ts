@@ -4,6 +4,7 @@ import { showErrorModal } from "../dialogs/Dialog";
 import { Config, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockTrendList } from "./types";
 import { v4 as uuidv4 } from "uuid";
 import { Balance, CashFlow, DateIntervalDataBundle, Dupond, Forcast, Growth, Operation, Profit, QuarterDataBundle, Report } from "./statement-types";
+import { makeStockStateUpdateAction, store } from "../state/Manager";
 // import _ from "lodash";
 const axiosErrorHandler = (err: any) => {
     let resp = err.response;
@@ -147,6 +148,7 @@ class WindClient {
 
         this.stockList = await this.getStockList();
         this.stockList.forEach(x => this.stockByID.set(x.id, x));
+        store.dispatch(makeStockStateUpdateAction({ tradingTime: await this.getTradeStatus() }));
     }
     /**
      * Search stocks in the basic info list
@@ -182,6 +184,14 @@ class WindClient {
             // if (!data.ok) {
             //     console.log("Failed to receive stock list update:", data.message);
             // } else { this.stockListUpdateHandlers.forEach(f => f(data.data)); }
+        };
+        this.stockListSocket.onclose = ev => {
+            if (ev.code === 1000) {
+                showErrorModal("股票列表已经停止刷新，这个可能是因为当前超过了交易时间。");
+                store.dispatch(makeStockStateUpdateAction({ tradingTime: false }));
+            } else {
+                showErrorModal(`WebSocket连接已断开: ${ev.code}`)
+            }
         };
     }
     /**
@@ -301,8 +311,8 @@ class WindClient {
         return (await this.vanillaClient.get("/api/quote/history/minute", {
             params: {
                 id: id,
-                "begin-date": beginDate,
-                "end-date": endDate,
+                "begin": beginDate,
+                "end": endDate,
                 frequency: frequency,
                 rehabilitation: rehabilitation
             }
@@ -325,8 +335,8 @@ class WindClient {
         return (await this.vanillaClient.get("/api/quote/history/day", {
             params: {
                 id: id,
-                "begin-date": beginDate,
-                "end-date": endDate,
+                "begin": beginDate,
+                "end": endDate,
                 rehabilitation: rehabilitation
             }
         })).data as RealTimeDataByDay[];
@@ -341,8 +351,8 @@ class WindClient {
         return (await this.vanillaClient.get("/api/quote/history/week", {
             params: {
                 id: id,
-                "begin-date": beginDate,
-                "end-date": endDate,
+                "begin": beginDate,
+                "end": endDate,
                 frequency: frequency,
                 rehabilitation: rehabilitation
             }
@@ -380,11 +390,14 @@ class WindClient {
         const wrapURL = (s: string) => `/api/statement/${s}`;
         let resp = (await axios.all([
             "report", "forcast"
-        ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, "begin-date": beginDate, "end-date": endDate } }))));
+        ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, "begin": beginDate, "end": endDate } }))));
         return {
             report: resp[0] as Report,
             forcast: resp[1] as Forcast
         };
+    }
+    public async getTradeStatus(date?: string): Promise<boolean> {
+        return (await this.vanillaClient.get("/api/quote/trade-status", { params: { date: date } })).data as boolean;
     }
 
 }

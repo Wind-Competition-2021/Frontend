@@ -37,7 +37,8 @@ const toDateString = (date: Date) => {
     return DateTime.fromJSDate(date).toFormat("yyyy-MM-dd");
 };
 
-const unwrapPercent = (val: string) => {
+const unwrapPercent = (valx: number) => {
+    let val = _.padStart(valx.toString(), 6, "0");
     const negative = val[0] === '-';
     if (negative) val = val.substr(1);
 

@@ -47,7 +47,7 @@ const SingleStockTrendChart: React.FC<{
             },
             vAxes: {
                 0: { title: "价格", gridlines: { color: "transparent" } },
-                1: { title: "成交量", gridlines: { color: "transparent" }, viewWindow: { max: maxVolume! * 2 } }
+                1: { title: "成交量", gridlines: { color: "transparent" }, viewWindow: { max: maxVolume! * 5 } }
             }
         }}
     ></Chart>;

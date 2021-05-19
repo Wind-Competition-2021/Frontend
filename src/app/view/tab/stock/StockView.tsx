@@ -1,5 +1,5 @@
 import { useDocumentTitle } from "../../../common/Util";
-import { Container, Divider, Input, Grid } from "semantic-ui-react";
+import { Container, Divider, Input, Grid, Dimmer } from "semantic-ui-react";
 import { client } from "../../../client/WindClient";
 import { RealTimeDataByDay, StockBasicInfo, StockList, StockTrendList } from "../../../client/types";
 import { Layout } from "./StockViewLayout";
@@ -9,8 +9,8 @@ import StockViewSearchModal from "./StockSearchModal";
 import StockListChart from "./StockListChart";
 import { useEffect, useState } from "react";
 import { useCallback } from "react";
-import { useDispatch } from "react-redux";
-import { makeCurrentStockAction } from "../../../state/Manager";
+import { useDispatch, useSelector } from "react-redux";
+import { makeCurrentStockAction, StateType } from "../../../state/Manager";
 import StockCandleChart from "./StockCandleChart";
 import SingleStockTrendChart from "./SingleStockTrendChart";
 const StockView: React.FC<{}> = () => {
@@ -38,20 +38,25 @@ const StockView: React.FC<{}> = () => {
     const updateGlobalCurrentStock = useCallback((text: string) => {
         dispatch(makeCurrentStockAction(text));
     }, [dispatch]);
+    const inTradeTime = useSelector((s: StateType) => s.stockState.tradingTime);
+
     /**
      * 页面加载完成，添加一个总的接受股票列表更新的监听器
      */
     useEffect(() => {
-        const token = client.addStockListUpdateListener((val) => {
-            setStockList(val);
-        });
-        return () => client.removeStockListUpdateListener(token);
-    }, []);
+        if (inTradeTime) {
+            console.log("Connecting stock list socket..")
+            const token = client.addStockListUpdateListener((val) => {
+                setStockList(val);
+            });
+            return () => client.removeStockListUpdateListener(token);
+        }
+    }, [inTradeTime]);
     /**
      * 当前股票更新时，更改单只股票用的Socket
      */
     useEffect(() => {
-        if (currentStock != null) {
+        if (currentStock != null && inTradeTime) {
             // client.connectSingleStockSocket(currentStock);
             const token = client.addSingleStockTrendUpdateListener(val => {
                 console.log("single update", val);
@@ -63,7 +68,7 @@ const StockView: React.FC<{}> = () => {
                 client.disconnectSingleStockSocket();
             };
         }
-    }, [currentStock]);
+    }, [currentStock, inTradeTime]);
 
     /**
      * 执行股票搜索(点击按钮或者按下回车)
@@ -76,6 +81,9 @@ const StockView: React.FC<{}> = () => {
     };
     return <>
         <Container>
+            <Dimmer active={!inTradeTime}>
+                <div>当前不在交易时间，本页面已停用。请前往行情分析页面。</div>
+            </Dimmer>
             <Grid columns="2">
                 <Grid.Column width="8">
                     <Input action={{

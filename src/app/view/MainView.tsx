@@ -5,7 +5,7 @@ import { useBasicDataLoaded } from "../state/Util";
 import QuoteAnalysisView from "./tab/analysis/quote/QuoteAnalysisView";
 import StockView from "./tab/stock/StockView";
 import ConfigView from "./tab/ConfigView";
-import StatementAnalysisView from "./tab/analysis/StatementAnalysisView";
+// import StatementAnalysisView from "./tab/analysis/StatementAnalysisView";
 // import StockCandleChart from "./tab/stock/StockCandleChart";
 // import { RehabilitationType, StockTrendList } from "../client/types";
 // import _ from "lodash";
@@ -14,7 +14,7 @@ import StatementAnalysisView from "./tab/analysis/StatementAnalysisView";
 const panes = [
     { menuItem: "证券", render: () => <Tab.Pane><StockView></StockView></Tab.Pane> },
     { menuItem: "行情分析", render: () => <Tab.Pane><QuoteAnalysisView></QuoteAnalysisView></Tab.Pane> },
-    { menuItem: "财务报表分析", render: () => <Tab.Pane><StatementAnalysisView></StatementAnalysisView></Tab.Pane> },
+    // { menuItem: "财务报表分析", render: () => <Tab.Pane><StatementAnalysisView></StatementAnalysisView></Tab.Pane> },
     { menuItem: "设置", render: () => <Tab.Pane><ConfigView></ConfigView></Tab.Pane> },
 ]
 

@@ -96,11 +96,11 @@ interface RealTimeDataByMinute extends BasicRealTimeData {
 interface RealTimeDataByDay extends BasicRealTimeData {
     date: string;//2021-05-17
     rehabilitation: RehabilitationType;
-    turnoverRate: string;//换手率
-    per: string;//市盈率
-    psr: string;//市销率
-    pcfr: string;//市现率
-    pbr: string;//市净率
+    turnoverRate: number;//换手率
+    per: number;//市盈率
+    psr: number;//市销率
+    pcfr: number;//市现率
+    pbr: number;//市净率
     stopped: boolean;//是否停市
     specialTreatment: boolean;//是否为ST
 };
@@ -110,7 +110,7 @@ interface RealTimeDataByDay extends BasicRealTimeData {
 interface RealTimeDataByWeek extends BasicRealTimeData {
     date: string;
     rehabilitation: "pre" | "post" | "none";
-    turnoverRate: string;//换手率
+    turnoverRate: number;//换手率
 };
 /**
  * 股票列表数据

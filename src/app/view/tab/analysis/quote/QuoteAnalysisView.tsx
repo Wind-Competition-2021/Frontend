@@ -30,6 +30,7 @@ const QuoteAnalysisView: React.FC<{
     const [candleEndDay, setCandleEndDay] = useState<Date>(today.toJSDate());
     const [weekDataStartDay, setWeekDataStartDay] = useState<Date>(today.minus({ months: 6 }).toJSDate());
     const [weekDataEndDay, setWeekDataEndDay] = useState<Date>(today.toJSDate());
+    const [dummy, setDummy] = useState(false);
     const applyDate = async (withLoading: boolean) => {
         if (withLoading) setLoading(true);
         setRealTimeDataByDay(await client.getStockDayHistory(
@@ -67,20 +68,23 @@ const QuoteAnalysisView: React.FC<{
             })();
         }
         // eslint-disable-next-line
-    }, [currentStock, rehabilitation]);
+    }, [currentStock, rehabilitation, dummy]);
 
     return <>
         <Dimmer active={loading}>
             <Loader>加载中...</Loader>
         </Dimmer>
-        <Grid columns="2">
-            <Grid.Column width="6">
+        <Grid columns="1">
+            <Grid.Column>
                 <AnalysisStockSearch
-                    setSelectedStock={setCurrentStock}
+                    setSelectedStock={s => {
+                        setCurrentStock(s);
+                        setDummy(!dummy);
+                    }}
                 ></AnalysisStockSearch>
             </Grid.Column>
-            <Grid.Column width="10">
-                {!currentStock ? <div>
+            <Grid.Column>
+                {!currentStock ? <div style={{ height: "500px" }}>
                 </div> : stockInfo && realTimeDataByDay && realTimeDataByWeek && <div>
                     <Form>
                         <Form.Group inline>
