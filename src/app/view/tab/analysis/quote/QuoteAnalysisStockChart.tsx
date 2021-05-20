@@ -17,7 +17,9 @@ const QuoteAnalysisStockChart: React.FC<{
                 <Header as="h4">
                     日K线数据
                 </Header>
-                <StockCandleChart data={realTimeDataByDay}></StockCandleChart>
+                <StockCandleChart generalData={realTimeDataByDay.map(item => ({
+                    ...item, label: DateTime.fromISO(item.date).toFormat("MM/dd")
+                }))}></StockCandleChart>
             </Grid.Column>
             <Grid.Column>
                 <Header as="h4">

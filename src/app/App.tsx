@@ -14,7 +14,7 @@ const DEBUG_MODE = process.env.NODE_ENV === "development";
 
 client.loadData().then(() => {
     store.dispatch(makeDataStateUpdateAction({ loaded: true, currentStock: "" }));
-    client.connectStockListSocket();
+    if (store.getState().stockState.tradingTime) client.connectStockListSocket();
 });
 
 const App: React.FC<{}> = () => {

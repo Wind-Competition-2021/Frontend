@@ -10,6 +10,23 @@ import 'react-day-picker/lib/style.css';
 import DayPickerInput from "react-day-picker/DayPickerInput"
 import QuoteAnalysisStockDetail from "./QuoteAnalysisStockDetail";
 import QuoteAnalysisStockChart from "./QuoteAnalysisStockChart";
+import { showErrorModal } from "../../../../dialogs/Dialog";
+/**
+ * Return if d1<=d2
+ * @param d1 
+ * @param d2 
+ */
+const checkValidDateRange = (d1: Date, d2: Date) => {
+    const l1 = DateTime.fromJSDate(d1);
+    const l2 = DateTime.fromJSDate(d2);
+    const diff = l1.diff(l2);
+    if (diff.toMillis() < 0) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
 const QuoteAnalysisView: React.FC<{
 }> = () => {
     useDocumentTitle("分析");
@@ -32,6 +49,10 @@ const QuoteAnalysisView: React.FC<{
     const [weekDataEndDay, setWeekDataEndDay] = useState<Date>(today.toJSDate());
     const [dummy, setDummy] = useState(false);
     const applyDate = async (withLoading: boolean) => {
+        if (!checkValidDateRange(candleStartDay, candleEndDay) || !checkValidDateRange(weekDataStartDay, weekDataEndDay)) {
+            showErrorModal("开始时间不得晚于结束时间");
+            return;
+        }
         if (withLoading) setLoading(true);
         setRealTimeDataByDay(await client.getStockDayHistory(
             currentStock!,
@@ -76,37 +97,43 @@ const QuoteAnalysisView: React.FC<{
         </Dimmer>
         <Grid columns="1">
             <Grid.Column>
-                <AnalysisStockSearch
-                    setSelectedStock={s => {
-                        setCurrentStock(s);
-                        setDummy(!dummy);
-                    }}
-                ></AnalysisStockSearch>
+                <Grid columns="2">
+                    <Grid.Column>
+                        <AnalysisStockSearch
+                            setSelectedStock={s => {
+                                setCurrentStock(s);
+                                setDummy(!dummy);
+                            }}
+                        ></AnalysisStockSearch>
+                    </Grid.Column>
+                    <Grid.Column>
+                        {currentStock && <Form>
+                            <Form.Group inline>
+                                <label>复权类型</label>
+                                <Form.Radio
+                                    label="前复权"
+                                    checked={rehabilitation === "pre"}
+                                    onChange={() => setRehabilitation("pre")}
+                                ></Form.Radio>
+                                <Form.Radio
+                                    label="后复权"
+                                    checked={rehabilitation === "post"}
+                                    onChange={() => setRehabilitation("post")}
+                                ></Form.Radio>
+                                <Form.Radio
+                                    label="不复权"
+                                    checked={rehabilitation === "none"}
+                                    onChange={() => setRehabilitation("none")}
+                                ></Form.Radio>
+                            </Form.Group>
+                        </Form>}
+                    </Grid.Column>
+                </Grid>
             </Grid.Column>
             <Grid.Column>
                 {!currentStock ? <div style={{ height: "500px" }}>
                 </div> : stockInfo && realTimeDataByDay && realTimeDataByWeek && <div>
-                    <Form>
-                        <Form.Group inline>
-                            <label>复权类型</label>
-                            <Form.Radio
-                                label="前复权"
-                                checked={rehabilitation === "pre"}
-                                onChange={() => setRehabilitation("pre")}
-                            ></Form.Radio>
-                            <Form.Radio
-                                label="后复权"
-                                checked={rehabilitation === "post"}
-                                onChange={() => setRehabilitation("post")}
-                            ></Form.Radio>
-                            <Form.Radio
-                                label="不复权"
-                                checked={rehabilitation === "none"}
-                                onChange={() => setRehabilitation("none")}
-                            ></Form.Radio>
-                        </Form.Group>
-                    </Form>
-                    <Divider></Divider>
+
                     <QuoteAnalysisStockDetail stockInfo={stockInfo}></QuoteAnalysisStockDetail>
                     <Divider></Divider>
                     <QuoteAnalysisStockChart
@@ -152,10 +179,14 @@ const QuoteAnalysisView: React.FC<{
                                     </Grid.Column>
                                 </Grid>
                             </Form.Field>
+                            <Form.Field>
+                                <label>操作</label>
+                                <Form.Button color="green" onClick={() => applyDate(true)}>
+                                    应用日期更改
+                                </Form.Button>
+                            </Form.Field>
                         </Form.Group>
-                        <Form.Button color="green" onClick={() => applyDate(true)}>
-                            应用日期更改
-                        </Form.Button>
+
                     </Form>
                 </div>}
             </Grid.Column>
@@ -163,5 +194,5 @@ const QuoteAnalysisView: React.FC<{
     </>
         ;
 };
-
+(window as (typeof window) & { d: typeof DateTime }).d = DateTime;
 export default QuoteAnalysisView;

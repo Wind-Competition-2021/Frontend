@@ -1,5 +1,5 @@
 import { useDocumentTitle } from "../../../common/Util";
-import { Container, Divider, Input, Grid, Dimmer } from "semantic-ui-react";
+import { Container, Divider, Input, Grid, Dimmer, Placeholder } from "semantic-ui-react";
 import { client } from "../../../client/WindClient";
 import { RealTimeDataByDay, StockBasicInfo, StockList, StockTrendList } from "../../../client/types";
 import { Layout } from "./StockViewLayout";
@@ -13,8 +13,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { makeCurrentStockAction, StateType } from "../../../state/Manager";
 import StockCandleChart from "./StockCandleChart";
 import SingleStockTrendChart from "./SingleStockTrendChart";
+import { DateTime } from "luxon";
 const StockView: React.FC<{}> = () => {
-    useDocumentTitle("证券");
+    useDocumentTitle("实时报价");
     /**
      * 证券列表数据
      */
@@ -106,16 +107,20 @@ const StockView: React.FC<{}> = () => {
             <Layout
                 name="default"
                 candleChart={
-                    realTimeDataByDay ? <StockCandleChart
-                        data={realTimeDataByDay}
-                    ></StockCandleChart> : <div></div>
+                    (inTradeTime) ? (realTimeDataByDay ? <StockCandleChart generalData={realTimeDataByDay.map(item => ({
+                        ...item, label: DateTime.fromISO(item.date).toFormat("MM/dd")
+                    }))}></StockCandleChart> : <div></div>) : (<Placeholder>
+                        {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
+                    </Placeholder>)
                 }
                 singleTrend={
-                    stockTrendList ? <SingleStockTrendChart
+                    (inTradeTime) ? (stockTrendList ? <SingleStockTrendChart
                         data={stockTrendList}
-                    ></SingleStockTrendChart> : <div></div>
+                    ></SingleStockTrendChart> : <div></div>) : (<Placeholder>
+                        {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
+                    </Placeholder>)
                 }
-                stockList={<StockListChart
+                stockList={(inTradeTime) ? (<StockListChart
                     currentStock={currentStock!}
                     setCurrentStock={(x) => {
                         setCurrentStock(x);
@@ -123,7 +128,10 @@ const StockView: React.FC<{}> = () => {
                         updateGlobalCurrentStock(x);
                     }}
                     stockList={stockList!}
-                ></StockListChart>}
+                ></StockListChart>) : (<Placeholder fluid>
+                    {_.times(20, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
+                </Placeholder>)
+                }
             ></Layout>
         </Container>
         <StockViewSearchModal

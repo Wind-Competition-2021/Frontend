@@ -120,7 +120,18 @@ interface StockListItem extends RealTimeDataByMinute {
 };
 type StockList = StockListItem[];
 
-
+interface GeneralCandleChartItem extends BasicRealTimeData {
+    label: string;
+};
+type GeneralCandleChartData = GeneralCandleChartItem[];
+interface ExtraCandleChartItem {
+    turnoverRate: number;//换手率
+    per: number;//市盈率
+    psr: number;//市销率
+    pcfr: number;//市现率
+    pbr: number;//市净率
+};
+type ExtraCandleChartData = ExtraCandleChartItem[];
 export type {
     Config,
     StockTrendItem,
@@ -137,5 +148,9 @@ export type {
     RealTimeDataByWeek,
     BasicRealTimeData,
     StockInfo,
-    RehabilitationType
+    RehabilitationType,
+    GeneralCandleChartData,
+    GeneralCandleChartItem,
+    ExtraCandleChartData,
+    ExtraCandleChartItem
 };
