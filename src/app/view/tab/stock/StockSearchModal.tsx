@@ -54,9 +54,6 @@ const StockViewSearchModal: React.FC<{
                                     <Table.Cell>
                                         {item.name}
                                     </Table.Cell>
-                                    {/* <Table.Cell>
-                                {item.industry}
-                            </Table.Cell> */}
                                 </Table.Row>))
                             })()}
                         </Table.Body>

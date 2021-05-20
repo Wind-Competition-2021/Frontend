@@ -16,16 +16,16 @@ const SingleStockTrendChart: React.FC<{
         item!.volume - pre!.volume,
         (item!.closing >= pre!.closing) ? (
             (item!.closing === pre!.closing) ?
-                "fill-color:white;stroke-color:black" :
-                "fill-color:red;stroke-color:black"
-        ) : "fill-color:green;stroke-color:black"
+                "fill-color:black;stroke-color:black;stroke-width:0" :
+                "fill-color:red;stroke-color:black;stroke-width:0"
+        ) : "fill-color:green;stroke-color:black;stroke-width:0"
     ])
-    // console.log("volume data",volumeData);
     const maxVolume = _.max(volumeData.map(t => t[0])) as number;
     const timeList = data.map((item, i) => DateTime.fromISO(item.time).toFormat("HH:mm"));
     const combinedData = _.zip(_.tail(timeList), _.tail(priceData), volumeData).map(([a, b, c]) => [a, b, ...c!]);
-    // console.log("maxvol", maxVolume);
-    // console.log(volumeData);
+    const maxPrice = _.max(priceData.map(i => i.v))!;
+    const minPrice = _.min(priceData.map(i => i.v))!;
+    const halfLen = (maxPrice - minPrice) / 2;
     return <Chart
         className="my-chart"
         chartType="ComboChart"
@@ -47,7 +47,7 @@ const SingleStockTrendChart: React.FC<{
                 }
             },
             vAxes: {
-                0: { title: "价格", gridlines: { color: "transparent" } },
+                0: { title: "价格", gridlines: { color: "transparent" }, viewWindow: { min: minPrice - halfLen } },
                 1: { title: "成交量", gridlines: { color: "transparent" }, viewWindow: { max: maxVolume! * 5 } }
             }
         }}

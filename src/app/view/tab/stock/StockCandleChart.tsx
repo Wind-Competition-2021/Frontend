@@ -91,11 +91,7 @@ const StockCandleChart: React.FC<{
     const maxPrice = unwrapNumber(_.max(generalData.map(item => item.highest))!, true).value;
     const minPrice = unwrapNumber(_.min(generalData.map(item => item.lowest))!, true).value;
     const halfLen = (maxPrice - minPrice) / 2;
-    // console.log("max val", maxVolume);
-    // console.log("maxp", maxPrice, 'minp', minPrice, "halflen", halfLen);
     return <Chart
-        // width="500px"
-        // height="300px "
         className="my-chart"
         chartType="ComboChart"
         data={[
