@@ -207,6 +207,7 @@ class WindClient {
         }
 
         this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/stock?token=${this.token!}&id=${stock_id}`);
+        console.log(this.singleStockSocket);
         console.log("Single socket to", stock_id, "created");
         this.singleStockSocket.onmessage = (msg: MessageEvent<string>) => {
             this.singleStockTrendUpdateHandlers.forEach(f => f(JSON.parse(msg.data) as StockTrendList));

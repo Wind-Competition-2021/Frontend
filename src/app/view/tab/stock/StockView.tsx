@@ -1,7 +1,7 @@
 import { useDocumentTitle } from "../../../common/Util";
-import { Container, Divider, Input, Grid, Dimmer, Placeholder, Loader } from "semantic-ui-react";
+import { Divider, Input, Grid, Dimmer, Placeholder, Loader } from "semantic-ui-react";
 import { client } from "../../../client/WindClient";
-import { RealTimeDataByDay, StockBasicInfo, StockList, StockTrendList } from "../../../client/types";
+import { RealTimeDataByDay, StockBasicInfo, StockList, StockListItem, StockTrendList } from "../../../client/types";
 import { Layout } from "./StockViewLayout";
 import "./StockView.css"
 import _ from "lodash";
@@ -14,6 +14,10 @@ import { makeCurrentStockAction, StateType } from "../../../state/Manager";
 import StockCandleChart from "./StockCandleChart";
 import SingleStockTrendChart from "./SingleStockTrendChart";
 import { DateTime } from "luxon";
+const stockListComparor = (x: StockListItem, y: StockListItem) => {
+    if (x.pinned === y.pinned) return y.closing - y.preClosing > x.closing - x.preClosing ? 1 : -1;
+    return x.pinned > y.pinned ? -1 : 1;
+};
 const StockView: React.FC<{}> = () => {
     useDocumentTitle("实时报价");
     /**
@@ -50,12 +54,12 @@ const StockView: React.FC<{}> = () => {
         if (inTradeTime) {
             console.log("Connecting stock list socket..")
             const token = client.addStockListUpdateListener((val) => {
+                val.sort(stockListComparor);
                 setStockList(val);
                 setStockListSocketLoaded(true);
             });
             return () => {
                 client.removeStockListUpdateListener(token);
-                client.disconnectStockListSocket();
             };
         }
     }, [inTradeTime]);
@@ -64,21 +68,23 @@ const StockView: React.FC<{}> = () => {
      */
     useEffect(() => {
         if (currentStock != null && inTradeTime) {
+            setStockList([]);
             setSingleListLoading(true);
             client.connectSingleStockSocket(currentStock);
             console.log("Connecting single socket:", currentStock);
             const token = client.addSingleStockTrendUpdateListener(val => {
                 console.log("single update", val);
-                setStockTrendList(val);
+                setStockTrendList(s => [...(s || []), ...val]);
                 setSingleListLoading(false);
             });
             client.getStockDayHistory(currentStock).then(resp => setRealTimeDataByDay(resp));
-            
+
             return () => {
                 client.removeSingleStockTrendUpdateListener(token);
                 client.disconnectSingleStockSocket();
             };
         }
+        // eslint-disable-next-line
     }, [currentStock, inTradeTime]);
 
     /**
@@ -91,7 +97,7 @@ const StockView: React.FC<{}> = () => {
 
     };
     return <>
-        <Container>
+        <div>
             <Dimmer active={!inTradeTime}>
                 <div>当前不在交易时间，本页面已停用。请前往行情分析页面。</div>
             </Dimmer>
@@ -171,6 +177,12 @@ const StockView: React.FC<{}> = () => {
                                     updateGlobalCurrentStock(x);
                                 }}
                                 stockList={stockList!}
+                                refreshPinnedStocks={() => {
+                                    const pinned = new Set(client.getLocalConfig()?.pinnedStocks);
+                                    const data = stockList!.map(i => ({ ...i, pinned: pinned.has(i.id) }));
+                                    data.sort(stockListComparor);
+                                    setStockList(data);
+                                }}
                             ></StockListChart>;
                         } else {
                             return <Placeholder fluid>
@@ -180,7 +192,7 @@ const StockView: React.FC<{}> = () => {
                     })()
                 }
             ></Layout>
-        </Container>
+        </div>
         <StockViewSearchModal
             matchedStocks={matchedStocks}
             setShowingSearchModal={setShowingSearchModal}

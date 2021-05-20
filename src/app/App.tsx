@@ -1,6 +1,6 @@
 import React from "react";
 // import axios from "axios";
-import { Container } from "semantic-ui-react";
+import { Grid } from "semantic-ui-react";
 import { Provider } from "react-redux";
 import { makeDataStateUpdateAction, store } from "./state/Manager";
 import MainView from "./view/MainView";
@@ -18,11 +18,15 @@ client.loadData().then(() => {
 });
 
 const App: React.FC<{}> = () => {
-    return <Container>
-        <Provider store={store}>
-            <MainView></MainView>
-        </Provider>
-    </Container>;
+    return <Grid colums="1" centered>
+        <Grid.Column width="15">
+            <Provider store={store}>
+                {/* <div style={{width:"80%"}}> */}
+                <MainView></MainView>
+                {/* </div> */}
+            </Provider>
+        </Grid.Column>
+    </Grid>;
 };
 
 export default App;

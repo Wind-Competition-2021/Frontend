@@ -23,7 +23,7 @@ interface Config {
  */
 interface StockTrendItem {
     id: string;//股票ID
-    preClosing: number;//前一分钟收盘价
+    preClosing: number;//前一日收盘价
     opening: number;//这分钟的开盘价
     closing: number;//现价
     highest: number;//最高价

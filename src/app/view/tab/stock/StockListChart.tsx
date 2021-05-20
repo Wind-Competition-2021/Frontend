@@ -1,6 +1,7 @@
+// import _ from "lodash";
 import React from "react";
 import {
-    Table, Icon
+    Table, Icon, Button
 } from "semantic-ui-react";
 import { StockList, StockListItem } from "../../../client/types";
 import { client } from "../../../client/WindClient";
@@ -19,15 +20,16 @@ const StockListChart: React.FC<{
     currentStock: string;
     setCurrentStock: (s: string) => void;
     stockList: StockList;
+    refreshPinnedStocks: () => void;
 }> = ({
-    currentStock, setCurrentStock, stockList
+    currentStock, setCurrentStock, stockList, refreshPinnedStocks
 }) => {
         const renderStockListLine = (item: StockListItem, i: number) => {
-            return (<Table.Row key={i} cells={[{ active: item.id === currentStock }]} as={() => (
+            return (<Table.Row key={item.id} cells={[{ active: item.id === currentStock }]} as={() => (
                 <tr onDoubleClick={() => {
                     console.log(item.id);
                     setCurrentStock(item.id);
-                }} style={{ cursor: "pointer" }} key={i}>
+                }} style={{ cursor: "pointer" }} key={item.id}>
                     {[
                         <>
                             {item.pinned && <Icon name="thumb tack"></Icon>}{i + 1}
@@ -39,7 +41,24 @@ const StockListChart: React.FC<{
                         convertNumbers(item.highest, true),
                         convertNumbers(item.lowest, true),
                         convertNumbers(item.volume),
-                        convertNumbers(item.turnover,true)].map((itemx, j) => {
+                        convertNumbers(item.turnover, true),
+                        <div>
+                            {item.pinned ? <Button size="tiny" color="red" onClick={async () => {
+                                const config = client.getLocalConfig()!;
+                                config.pinnedStocks = config.pinnedStocks.filter(t => t !== item.id);
+
+                                await client.updateConfig(config);
+                                refreshPinnedStocks();
+                            }}>
+                                取消置顶</Button> : <Button size="tiny" color="green" onClick={async () => {
+                                    const config = client.getLocalConfig()!;
+                                    config.pinnedStocks.push(item.id);
+
+                                    await client.updateConfig(config);
+                                    refreshPinnedStocks();
+                                }}>
+                                添加置顶</Button>}
+                        </div>].map((itemx, j) => {
                             if (j !== 4) {
                                 return <Table.Cell
                                     key={j}
@@ -62,7 +81,7 @@ const StockListChart: React.FC<{
             <Table>
                 <Table.Header>
                     <Table.Row>
-                        {["#", "股票代码", "股票名", "当前价格", "涨跌幅度", "最高价", "最低价", "成交量", "成交额"].map((item, i) => (<Table.HeaderCell textAlign="right" key={i}>{item}</Table.HeaderCell>))}
+                        {["#", "股票代码", "股票名", "当前价格", "涨跌幅度", "最高价", "最低价", "成交量", "成交额", "置顶操作"].map((item, i) => (<Table.HeaderCell textAlign="right" key={i}>{item}</Table.HeaderCell>))}
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>

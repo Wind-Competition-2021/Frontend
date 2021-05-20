@@ -12,25 +12,26 @@ const SingleStockTrendChart: React.FC<{
     data: StockTrendList
 }> = ({ data }) => {
     const priceData = data.map(item => myUnwrapNumber(item.closing, true));
-    const volumeData = data.map(item => [
-        item.volume,
-        (item.closing >= item.preClosing) ? (
-            (item.closing === item.preClosing) ?
+    const volumeData = _.zip(_.tail(data), _.initial(data.map(i => ({ closing: i.closing, volume: i.volume })))).map(([item, pre]) => [
+        item!.volume - pre!.volume,
+        (item!.closing >= pre!.closing) ? (
+            (item!.closing === pre!.closing) ?
                 "fill-color:white;stroke-color:black" :
                 "fill-color:red;stroke-color:black"
         ) : "fill-color:green;stroke-color:black"
-
     ])
-    const maxVolume = _.max(data.map(t => t.volume));
+    // console.log("volume data",volumeData);
+    const maxVolume = _.max(volumeData.map(t => t[0])) as number;
     const timeList = data.map((item, i) => DateTime.fromISO(item.time).toFormat("HH:mm"));
-    const combinedData = _.zip(timeList, priceData, volumeData).map(([a, b, c]) => [a, b, ...c!]);
+    const combinedData = _.zip(_.tail(timeList), _.tail(priceData), volumeData).map(([a, b, c]) => [a, b, ...c!]);
     console.log("maxvol", maxVolume);
+    console.log(volumeData);
     return <Chart
+        className="my-chart"
         chartType="ComboChart"
         data={[
             ["时间", "成交价", "成交量", { role: "style" }],
             ...combinedData
-            // ["qwq", 10, "", 20]
         ]}
         options={{
             hAxis: { title: "时间" },

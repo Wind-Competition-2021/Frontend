@@ -65,6 +65,7 @@ const QuoteAnalysisView: React.FC<{
     const [stockLoading, setStockLoading] = useState(false);
     const applyDate = async (withLoading: boolean, candleType: CandleChartType) => {
         const range = timeInterval[candleType];
+        console.log(range);
         if (!checkValidDateRange(range.begin, range.end)) {
             showErrorModal("开始时间不得晚于结束时间");
             return;
