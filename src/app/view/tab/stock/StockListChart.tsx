@@ -39,7 +39,7 @@ const StockListChart: React.FC<{
                         convertNumbers(item.highest, true),
                         convertNumbers(item.lowest, true),
                         convertNumbers(item.volume),
-                        convertNumbers(item.turnover)].map((itemx, j) => {
+                        convertNumbers(item.turnover,true)].map((itemx, j) => {
                             if (j !== 4) {
                                 return <Table.Cell
                                     key={j}
@@ -57,7 +57,7 @@ const StockListChart: React.FC<{
             )} />
             );
         }
-        return <div style={{ overflowY: "scroll", maxHeight: "500px" }
+        return <div style={{ overflowY: "scroll", maxHeight: "400px" }
         }>
             <Table>
                 <Table.Header>

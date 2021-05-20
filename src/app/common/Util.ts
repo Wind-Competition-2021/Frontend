@@ -15,14 +15,20 @@ const useDocumentTitle: (title: string) => void = (title: string) => {
 };
 
 const convertNumbers = function (valx: number, multi10000 = false) {
-    const val = valx.toString();
+    const negative = valx < 0 ? "-" : "";
+    if (negative) valx *= -1;
+    let val = valx.toString();
+    if (valx < 10000) {
+        val = _.padStart(valx.toString(), 5, "0");
+
+    }
     if (multi10000) {
         //180000.0000 len=10
-        const result = _.trimEnd((val.slice(0, val.length - 4) + "." + val.slice(val.length - 4)), "0");
-        if (result.endsWith(".0")) return result + "0";
-        else if (result.endsWith(".")) return result + "00"
-        else return result;
-    } return val;
+        const result = _.trimEnd(((val.slice(0, val.length - 4) || "0") + "." + val.slice(val.length - 4)), "0");
+        if (result.endsWith(".0")) return negative + result + "0";
+        else if (result.endsWith(".")) return negative + result + "00"
+        else return negative + result;
+    } return negative + val;
 };
 type onChangeType = ((event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => void);
 const useInputValue: (text?: string) => { value: string; onChange: onChangeType } = (text: string = "") => {

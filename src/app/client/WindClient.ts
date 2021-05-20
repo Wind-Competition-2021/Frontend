@@ -177,6 +177,9 @@ class WindClient {
             this.stockListSocket.close();
         }
         this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/stock/list?token=${this.token!}`);
+        this.stockListSocket.onopen = () => {
+            this.stockListSocket!.send(JSON.stringify(this.stockList!.map(item => item.id)));
+        };
         this.stockListSocket.onmessage = (msg: MessageEvent<string>) => {
             this.stockListUpdateHandlers.forEach(f => f(JSON.parse(msg.data) as StockList));
             // const data = JSON.parse(msg.data) as WebsocketPacketWrapper<StockList>;
@@ -186,23 +189,25 @@ class WindClient {
             // } else { this.stockListUpdateHandlers.forEach(f => f(data.data)); }
         };
         this.stockListSocket.onclose = ev => {
-            if (ev.code === 1000) {
+            if (ev.code === 1000 && ev.reason === "Trade Off") {
                 showErrorModal("股票列表已经停止刷新，这个可能是因为当前超过了交易时间。");
                 store.dispatch(makeStockStateUpdateAction({ tradingTime: false }));
-            } else {
+            } else if (ev.code !== 1000) {
                 showErrorModal(`WebSocket连接已断开: ${ev.code}`)
             }
         };
     }
     /**
-     * Connect to the stock list update socket.
+     * Connect to the single stock update socket.
      * This function will disconnect previous stock list update socket.
      */
     public connectSingleStockSocket(stock_id: string) {
         if (this.singleStockSocket) {
             this.singleStockSocket.close();
         }
-        this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/stock?token=${this.token!}&stock_id=${stock_id}`);
+
+        this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/stock?token=${this.token!}&id=${stock_id}`);
+        console.log("Single socket to", stock_id, "created");
         this.singleStockSocket.onmessage = (msg: MessageEvent<string>) => {
             this.singleStockTrendUpdateHandlers.forEach(f => f(JSON.parse(msg.data) as StockTrendList));
             // const data = JSON.parse(msg.data) as WebsocketPacketWrapper<StockTrendList>;
@@ -216,6 +221,12 @@ class WindClient {
      */
     public disconnectSingleStockSocket() {
         if (this.singleStockSocket) this.singleStockSocket.close();
+    }
+    /**
+     * Disconnect the stock list socket
+     */
+    public disconnectStockListSocket() {
+        if (this.stockListSocket) this.stockListSocket.close();
     }
     /**
      * Update config (both remote and local)

@@ -2,7 +2,7 @@ import React from "react";
 import { ExtraCandleChartData, GeneralCandleChartData } from "../../../client/types";
 import { Chart } from "react-google-charts";
 // import { DateTime } from "luxon";
-import { unwrapNumber } from "../../../common/Util";
+import { unwrapNumber, unwrapPercent } from "../../../common/Util";
 import _ from "lodash";
 
 
@@ -27,11 +27,11 @@ const StockCandleChart: React.FC<{
      * 用于绘制K线图
      */
     const candleChartData: CandleChartEntry[] = generalData.map(item => ({
-        closing: myUnwrapNumber(item.closing),
-        highest: myUnwrapNumber(item.highest),
-        lowest: myUnwrapNumber(item.lowest),
+        closing: myUnwrapNumber(item.closing, true),
+        highest: myUnwrapNumber(item.highest, true),
+        lowest: myUnwrapNumber(item.lowest, true),
         label: item.label,
-        opening: myUnwrapNumber(item.opening)
+        opening: myUnwrapNumber(item.opening, true)
     }));
     const prefixSum: number[] = generalData.map(item => myUnwrapNumber(item.closing, true).v);
     for (let i = 1; i < prefixSum.length; i++) {
@@ -41,8 +41,41 @@ const StockCandleChart: React.FC<{
      * 用于绘制K线图的5日均价
      */
     const average5Data = prefixSum.map((x, i) => (x - (i <= 4 ? 0 : prefixSum[i - 5])) / (i <= 4 ? (i + 1) : 5));
-    const volumeData = generalData.map(item => item.volume);
-    const combinedData = _.zip(candleChartData, average5Data, volumeData).map(([a, b, c]) => [a!.label, a!.lowest, a!.opening, a!.closing, a!.highest, `最低: ${a!.lowest.f}<br>开盘: ${a!.opening.f}<br>收盘: ${a!.closing.f}<br>最高: ${a!.highest.f}`, b, c, (a!.opening.v <= a!.closing.v) ? "stroke-color:red;fill-color:red;fill-opacity:0.4" : "fill-color:blue"]);
+    const volumeData = generalData.map(item => ({
+        volume: item.volume,
+        turnover: myUnwrapNumber(item.turnover, true)
+    }));
+    const ratesData = extraData?.map(i => ({
+        per: unwrapPercent(i.per).display,
+        psr: unwrapPercent(i.psr).display,
+        pcfr: unwrapPercent(i.pcfr).display,
+        pbr: unwrapPercent(i.pbr).display,
+        tr: unwrapPercent(i.turnoverRate).display,
+    }))
+    const combinedData = _.zip(candleChartData, average5Data, volumeData, ratesData || []).map(([a, b, c, d]) => [
+        //标签
+        a!.label,
+        //K线
+        a!.lowest, a!.opening, a!.closing, a!.highest,
+        `${a!.label}<br>
+        最低: ${a!.lowest.f}<br>
+        开盘: ${a!.opening.f}<br>
+        收盘: ${a!.closing.f}<br>
+        最高: ${a!.highest.f}
+        `+ (d!==undefined ? `
+        <br>换手率:${d!.tr}<br>
+        市盈率:${d!.per}<br>
+        市销率:${d!.psr}<br>
+        市现率:${d!.pcfr}<br>
+        市净率:${d!.pbr}
+        `: ""),
+        //五日均价
+        b,
+        //成交量
+        c!.volume, (a!.opening.v <= a!.closing.v) ? "stroke-color:red;fill-color:red;fill-opacity:0.4" : "fill-color:blue",
+        `${a!.label}<br>成交量:${c!.volume}<br>成交额:<br>${c!.turnover.f}`
+    ]);
+    // console.log(combinedData);
     const colorModifier = () => {
         document.querySelectorAll("rect[width='2']").forEach(item => {
             // console.log("modify", item);
@@ -54,19 +87,19 @@ const StockCandleChart: React.FC<{
 
         });
     };
-    const maxVolume = _.max(combinedData.map(t => _.nth(t, -2)));
+    const maxVolume = _.max(volumeData.map(t => t.volume));
     const maxPrice = unwrapNumber(_.max(generalData.map(item => item.highest))!, true).value;
     const minPrice = unwrapNumber(_.min(generalData.map(item => item.lowest))!, true).value;
     const halfLen = (maxPrice - minPrice) / 2;
-    console.log("max val", maxVolume);
-    console.log("maxp", maxPrice, 'minp', minPrice, "halflen", halfLen);
+    // console.log("max val", maxVolume);
+    // console.log("maxp", maxPrice, 'minp', minPrice, "halflen", halfLen);
     return <Chart
         // width="500px"
         // height="300px "
         className="my-chart"
         chartType="ComboChart"
         data={[
-            ["日期", "价格", "开盘价", "收盘价", "最高价", { role: "tooltip", type: "string", p: { html: true } }, "五日均价", "成交量", { role: "style" }],
+            ["日期", "价格", "开盘价", "收盘价", "最高价", { role: "tooltip", type: "string", p: { html: true } }, "五日均价", "成交量", { role: "style" }, { role: "tooltip", type: "string", p: { html: true } }],
             ...combinedData
         ]}
         options={{
@@ -118,7 +151,7 @@ const StockCandleChart: React.FC<{
                         color: "transparent"
                     },
                     viewWindow: {
-                        max: maxVolume as number * 5
+                        max: maxVolume as number * 4
                     }
                 }
             }

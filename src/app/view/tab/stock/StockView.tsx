@@ -1,5 +1,5 @@
 import { useDocumentTitle } from "../../../common/Util";
-import { Container, Divider, Input, Grid, Dimmer, Placeholder } from "semantic-ui-react";
+import { Container, Divider, Input, Grid, Dimmer, Placeholder, Loader } from "semantic-ui-react";
 import { client } from "../../../client/WindClient";
 import { RealTimeDataByDay, StockBasicInfo, StockList, StockTrendList } from "../../../client/types";
 import { Layout } from "./StockViewLayout";
@@ -35,6 +35,8 @@ const StockView: React.FC<{}> = () => {
     const [searchText, setSearchText] = useState("");
     const [showingSearchModal, setShowingSearchModal] = useState(false);
     const [matchedStocks, setMatchedStocks] = useState<(StockBasicInfo)[]>([]);
+    const [stockListSocketLoaded, setStockListSocketLoaded] = useState(false);
+    const [singleListLoading, setSingleListLoading] = useState(false);
     const dispatch = useDispatch();
     const updateGlobalCurrentStock = useCallback((text: string) => {
         dispatch(makeCurrentStockAction(text));
@@ -49,8 +51,12 @@ const StockView: React.FC<{}> = () => {
             console.log("Connecting stock list socket..")
             const token = client.addStockListUpdateListener((val) => {
                 setStockList(val);
+                setStockListSocketLoaded(true);
             });
-            return () => client.removeStockListUpdateListener(token);
+            return () => {
+                client.removeStockListUpdateListener(token);
+                client.disconnectStockListSocket();
+            };
         }
     }, [inTradeTime]);
     /**
@@ -58,12 +64,16 @@ const StockView: React.FC<{}> = () => {
      */
     useEffect(() => {
         if (currentStock != null && inTradeTime) {
-            // client.connectSingleStockSocket(currentStock);
+            setSingleListLoading(true);
+            client.connectSingleStockSocket(currentStock);
+            console.log("Connecting single socket:", currentStock);
             const token = client.addSingleStockTrendUpdateListener(val => {
                 console.log("single update", val);
                 setStockTrendList(val);
+                setSingleListLoading(false);
             });
             client.getStockDayHistory(currentStock).then(resp => setRealTimeDataByDay(resp));
+            
             return () => {
                 client.removeSingleStockTrendUpdateListener(token);
                 client.disconnectSingleStockSocket();
@@ -85,6 +95,10 @@ const StockView: React.FC<{}> = () => {
             <Dimmer active={!inTradeTime}>
                 <div>当前不在交易时间，本页面已停用。请前往行情分析页面。</div>
             </Dimmer>
+            <Dimmer active={!stockListSocketLoaded && inTradeTime}>
+                <Loader>建立连接中...</Loader>
+            </Dimmer>
+
             <Grid columns="2">
                 <Grid.Column width="8">
                     <Input action={{
@@ -107,30 +121,63 @@ const StockView: React.FC<{}> = () => {
             <Layout
                 name="default"
                 candleChart={
-                    (inTradeTime) ? (realTimeDataByDay ? <StockCandleChart generalData={realTimeDataByDay.map(item => ({
-                        ...item, label: DateTime.fromISO(item.date).toFormat("MM/dd")
-                    }))}></StockCandleChart> : <div></div>) : (<Placeholder>
-                        {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
-                    </Placeholder>)
+                    (() => {
+                        if (singleListLoading && inTradeTime) {
+                            return <Dimmer active>
+                                <Loader>加载中</Loader>
+                            </Dimmer>
+                        }
+                        if (inTradeTime) {
+                            return realTimeDataByDay ? <StockCandleChart generalData={realTimeDataByDay.map(item => ({
+                                ...item, label: DateTime.fromISO(item.date).toFormat("MM/dd")
+                            }))}></StockCandleChart> : <div></div>;
+                        } else {
+                            return <Placeholder>
+                                {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
+                            </Placeholder>;
+                        }
+                    })()
                 }
                 singleTrend={
-                    (inTradeTime) ? (stockTrendList ? <SingleStockTrendChart
-                        data={stockTrendList}
-                    ></SingleStockTrendChart> : <div></div>) : (<Placeholder>
-                        {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
-                    </Placeholder>)
+                    (() => {
+                        if (singleListLoading && inTradeTime) {
+                            return <div>
+                                <div style={{ height: "300px" }}></div>
+                                <Dimmer active>
+                                    <Loader>加载中</Loader>
+                                </Dimmer>
+                            </div>
+                        }
+                        if (inTradeTime) {
+                            return stockTrendList ? <SingleStockTrendChart
+                                data={stockTrendList}
+                            ></SingleStockTrendChart> : <div></div>;
+                        } else {
+                            return <Placeholder>
+                                {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
+                            </Placeholder>;
+                        }
+
+                    })()
                 }
-                stockList={(inTradeTime) ? (<StockListChart
-                    currentStock={currentStock!}
-                    setCurrentStock={(x) => {
-                        setCurrentStock(x);
-                        setSearchText(x);
-                        updateGlobalCurrentStock(x);
-                    }}
-                    stockList={stockList!}
-                ></StockListChart>) : (<Placeholder fluid>
-                    {_.times(20, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
-                </Placeholder>)
+                stockList={
+                    (() => {
+                        if (inTradeTime) {
+                            return <StockListChart
+                                currentStock={currentStock!}
+                                setCurrentStock={(x) => {
+                                    setCurrentStock(x);
+                                    setSearchText(x);
+                                    updateGlobalCurrentStock(x);
+                                }}
+                                stockList={stockList!}
+                            ></StockListChart>;
+                        } else {
+                            return <Placeholder fluid>
+                                {_.times(20, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
+                            </Placeholder>;
+                        }
+                    })()
                 }
             ></Layout>
         </Container>
