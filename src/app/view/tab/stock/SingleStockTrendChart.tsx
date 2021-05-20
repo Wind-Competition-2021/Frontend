@@ -24,8 +24,8 @@ const SingleStockTrendChart: React.FC<{
     const maxVolume = _.max(volumeData.map(t => t[0])) as number;
     const timeList = data.map((item, i) => DateTime.fromISO(item.time).toFormat("HH:mm"));
     const combinedData = _.zip(_.tail(timeList), _.tail(priceData), volumeData).map(([a, b, c]) => [a, b, ...c!]);
-    console.log("maxvol", maxVolume);
-    console.log(volumeData);
+    // console.log("maxvol", maxVolume);
+    // console.log(volumeData);
     return <Chart
         className="my-chart"
         chartType="ComboChart"

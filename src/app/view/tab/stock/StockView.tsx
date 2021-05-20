@@ -68,7 +68,7 @@ const StockView: React.FC<{}> = () => {
      */
     useEffect(() => {
         if (currentStock != null && inTradeTime) {
-            setStockList([]);
+            setStockTrendList([]);
             setSingleListLoading(true);
             client.connectSingleStockSocket(currentStock);
             console.log("Connecting single socket:", currentStock);
