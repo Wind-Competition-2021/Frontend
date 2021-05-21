@@ -65,10 +65,11 @@ const StockListChart: React.FC<{
                                     active={item.id === currentStock}
                                 >{itemx}</Table.Cell>;
                             } else {
-                                const { value, display } = unwrapNumber((item.closing - item.preClosing), true);
+                                const { value } = unwrapNumber((item.closing - item.preClosing) / item.preClosing, true);
                                 return <Table.Cell positive={value < 0} negative={value > 0} textAlign="right" key={j}>
-                                    {display}
+                                    {((item.closing - item.preClosing) / item.preClosing / 100).toFixed(2)}%
                                 </Table.Cell>
+
                             }
                         })}
                 </tr>

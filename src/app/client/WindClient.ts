@@ -1,7 +1,7 @@
 import axios from "axios";
 import { BACKEND_BASE_URL, DEBUG_MODE } from "../App";
 import { showErrorModal } from "../dialogs/Dialog";
-import { Config, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockTrendList } from "./types";
+import { Config, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockListFetchType, StockTrendList } from "./types";
 import { v4 as uuidv4 } from "uuid";
 import { Balance, CashFlow, DateIntervalDataBundle, Dupond, Forcast, Growth, Operation, Profit, QuarterDataBundle, Report } from "./statement-types";
 import { makeStockStateUpdateAction, store } from "../state/Manager";
@@ -32,7 +32,9 @@ class WindClient {
     private stockListUpdateHandlers = new Map<string, StockListUpdateHandler>();
     private singleStockTrendUpdateHandlers = new Map<string, SingleStockTrendUpdateHandler>();
     private stockByID = new Map<String, StockBasicInfo>();
-    private stockList: StockBasicInfoList | null = null;
+    private fullStockList: StockBasicInfoList | null = null;
+    private simpleStockList: StockBasicInfoList | null = null;
+
     private stockListSocket: WebSocket | null = null;
     private singleStockSocket: WebSocket | null = null;
 
@@ -67,8 +69,11 @@ class WindClient {
     public getLocalConfig() {
         return this.config
     }
-    public getLocalStockBasicInfoList() {
-        return this.stockList!;
+    public getLocalFullStockBasicInfoList() {
+        return this.fullStockList!;
+    }
+    public getLocalSimpleStockBasicInfoList() {
+        return this.fullStockList!;
     }
     /**
      * Set the config object stored in memory and localStorage
@@ -145,9 +150,9 @@ class WindClient {
         // await this.updateRemoteConfig(this.config!);
         window.localStorage.setItem("token", this.token);
         window.localStorage.setItem("config", JSON.stringify(this.config));
-
-        this.stockList = await this.getStockList();
-        this.stockList.forEach(x => this.stockByID.set(x.id, x));
+        this.simpleStockList = await this.getStockList("default");
+        this.fullStockList = await this.getStockList("all");
+        this.fullStockList.forEach(x => this.stockByID.set(x.id, x));
         store.dispatch(makeStockStateUpdateAction({ tradingTime: await this.getTradeStatus() }));
     }
     /**
@@ -159,8 +164,8 @@ class WindClient {
     public searchStock(keyword: string, countLimit: number = 10): StockBasicInfoList {
         keyword = keyword.trim();
         const result: StockBasicInfoList = [];
-        for (let i = 0, j = 0; i < countLimit && j < this.stockList!.length; j++) {
-            const current = this.stockList![j];
+        for (let i = 0, j = 0; i < countLimit && j < this.fullStockList!.length; j++) {
+            const current = this.fullStockList![j];
             if (current.id.includes(keyword) || current.name.includes(keyword)) {
                 i++;
                 result.push(current);
@@ -176,9 +181,9 @@ class WindClient {
         if (this.stockListSocket) {
             this.stockListSocket.close();
         }
-        this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/stock/list?token=${this.token!}`);
+        this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/realtime/list?token=${this.token!}`);
         this.stockListSocket.onopen = () => {
-            this.stockListSocket!.send(JSON.stringify(this.stockList!.map(item => item.id)));
+            this.stockListSocket!.send(JSON.stringify(this.simpleStockList!.map(item => item.id)));
         };
         this.stockListSocket.onmessage = (msg: MessageEvent<string>) => {
             this.stockListUpdateHandlers.forEach(f => f(JSON.parse(msg.data) as StockList));
@@ -206,7 +211,7 @@ class WindClient {
             this.singleStockSocket.close();
         }
 
-        this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/ws/stock?token=${this.token!}&id=${stock_id}`);
+        this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/realtime/trend?token=${this.token!}&id=${stock_id}`);
         console.log(this.singleStockSocket);
         console.log("Single socket to", stock_id, "created");
         this.singleStockSocket.onmessage = (msg: MessageEvent<string>) => {
@@ -283,8 +288,8 @@ class WindClient {
      * Such basic info are usually used to execute a stock search.
      * @returns The basic info
      */
-    public async getStockList(): Promise<StockBasicInfoList> {
-        return (await this.vanillaClient.get("/api/stock/list")).data as StockBasicInfoList;
+    public async getStockList(type: StockListFetchType): Promise<StockBasicInfoList> {
+        return (await this.vanillaClient.get("/api/stock/list", { params: { type: type } })).data as StockBasicInfoList;
     }
     // /**
     //  * Get the price summary of a certain stock.

@@ -92,7 +92,7 @@ const StockView: React.FC<{}> = () => {
      */
     const doStockSearch = () => {
         setMatchedStocks(_.take(client
-            .getLocalStockBasicInfoList().filter(x => (x.id.includes(searchText) || x.name.includes(searchText))), 100));
+            .getLocalSimpleStockBasicInfoList().filter(x => (x.id.includes(searchText) || x.name.includes(searchText))), 100));
         setShowingSearchModal(true);
 
     };

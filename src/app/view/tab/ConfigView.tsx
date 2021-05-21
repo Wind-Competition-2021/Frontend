@@ -42,12 +42,12 @@ const ConfigView: React.FC<{}> = () => {
                         </Form.Input>
                         <Form.Input label="单支股票刷新间隔(秒)" input={<input
                             type="number"
-                            value={config!.refreshInterval.single}
+                            value={config!.refreshInterval.trend}
                             onChange={e => setConfig({
                                 ...config!,
                                 refreshInterval: {
                                     ...config!.refreshInterval,
-                                    single: parseInt(e.target.value)
+                                    trend: parseInt(e.target.value)
                                 }
                             })}
                         >

@@ -30,6 +30,11 @@ const convertNumbers = function (valx: number, multi10000 = false) {
         else return negative + result;
     } return negative + val;
 };
+
+// const toPercent = (a: number, b: number) => {
+//     const div = (a/b).toFixed()
+// };
+
 type onChangeType = ((event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => void);
 const useInputValue: (text?: string) => { value: string; onChange: onChangeType } = (text: string = "") => {
     const [value, setValue] = useState(text);
@@ -66,6 +71,6 @@ const unwrapNumber = (num: number, multi10000 = false) => {
     return ({ value: multi10000 ? num / 10000 : num, display: convertNumbers(num, multi10000) });
 }
 // (window as (typeof window) & {f:any}).f=convertNumbers;
-export { useDocumentTitle, convertNumbers, useInputValue, toDateString, unwrapPercent, unwrapNumber };
+export { useDocumentTitle, convertNumbers, useInputValue, toDateString, unwrapPercent, unwrapNumber};
 
 export type { onChangeType }

@@ -16,7 +16,7 @@ const AnalysisStockSearch: React.FC<{
         const [loaded, setLoaded] = useState(false);
         const doStockSearch = (text: string) => {
             setSearchResult(_.take(client
-                .getLocalStockBasicInfoList().filter(x => (x.id.includes(text) || x.name.includes(text))), 5).map(item => ({ stockid: item.id, title: item.name })));
+                .getLocalFullStockBasicInfoList().filter(x => (x.id.includes(text) || x.name.includes(text))), 5).map(item => ({ stockid: item.id, title: item.name })));
         };
         useEffect(() => {
             if (!loaded) {

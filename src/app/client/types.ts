@@ -14,7 +14,7 @@ type RehabilitationType = "pre" | "post" | "none";
 interface Config {
     pinnedStocks: string[];//用户置顶股票列表
     refreshInterval: {
-        single: number;//单只股票数据刷新间隔
+        trend: number;//单只股票数据刷新间隔
         list: number;//股票列表刷新间隔
     }
 };
@@ -132,6 +132,9 @@ interface ExtraCandleChartItem {
     pbr: number;//市净率
 };
 type ExtraCandleChartData = ExtraCandleChartItem[];
+
+type StockListFetchType = "sz50" | "hs300" | "zz500" | "index" | "stock" | "default" | "all";
+
 export type {
     Config,
     StockTrendItem,
@@ -152,5 +155,6 @@ export type {
     GeneralCandleChartData,
     GeneralCandleChartItem,
     ExtraCandleChartData,
-    ExtraCandleChartItem
+    ExtraCandleChartItem,
+    StockListFetchType
 };
