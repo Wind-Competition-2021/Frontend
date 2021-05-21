@@ -25,10 +25,13 @@ function filterStockTrendList(input: StockTrendList): StockTrendList {
     for (const item of input) {
         if (result.length === 0) {
             result.push(item);
-            lastTime = DateTime.fromISO(_.last(result)!.time);
+            lastTime = DateTime.fromISO(_.last(result)!.time).set({ second: 0 });
         } else {
-            const currTime = DateTime.fromISO(item.time);
-            if (currTime.diff(lastTime!).minutes >= 1) {
+            const currTime = DateTime.fromISO(item.time).set({ second: 0 });
+            // console.log("last", lastTime);
+            // console.log("curr", currTime);
+            // console.log("diff", currTime.diff(lastTime!, "minutes"));
+            if (currTime.diff(lastTime!, "minutes").minutes >= 1) {
                 result.push(item);
             } else {
                 result[result.length - 1] = item;
@@ -95,7 +98,7 @@ const StockView: React.FC<{}> = () => {
             console.log("Connecting single socket:", currentStock);
             const token = client.addSingleStockTrendUpdateListener(val => {
                 console.log("single update", val);
-
+                // setStockTrendList(val);
                 setStockTrendList(s => _.takeRight(filterStockTrendList([...(s || []), ...val]), 90));
                 setSingleListLoading(false);
             });

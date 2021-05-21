@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Grid, Form, Dimmer, Loader,  Menu, Segment } from "semantic-ui-react";
 import { RealTimeDataByDay, RealTimeDataByWeek, RehabilitationType, StockInfo } from "../../../../client/types";
 import { client } from "../../../../client/WindClient";
-import { toDateString, useDocumentTitle } from "../../../../common/Util";
+import { checkValidDateRange, isFutureDate, toDateString, useDocumentTitle } from "../../../../common/Util";
 import AnalysisStockSearch from "../AnalysisStockSearch";
 import { DateTime } from "luxon";
 import 'react-day-picker/lib/style.css';
@@ -12,26 +12,7 @@ import QuoteAnalysisStockDetail from "./QuoteAnalysisStockDetail";
 // import QuoteAnalysisStockChart from "./QuoteAnalysisStockChart";
 import { showErrorModal } from "../../../../dialogs/Dialog";
 import StockCandleChart from "../../stock/StockCandleChart";
-/**
- * Return if d1<=d2
- * @param d1 
- * @param d2 
- */
-const checkValidDateRange = (d1: Date, d2: Date) => {
-    const l1 = DateTime.fromJSDate(d1);
-    const l2 = DateTime.fromJSDate(d2);
-    const diff = l1.diff(l2);
-    if (diff.toMillis() < 0) {
-        return true;
-    } else {
-        return false;
-    }
-};
-const isFutureDate = (d: Date) => {
-    const now = DateTime.now();
-    if (checkValidDateRange(now.toJSDate(), d)) return true;
-    return false;
-};
+
 type CandleChartType = "day" | "week" | "month";
 type TimeIntervalType = { begin: Date; end: Date };
 interface CandleTypeWrapper<Day, Week, Month> {

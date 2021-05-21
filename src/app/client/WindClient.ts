@@ -3,7 +3,7 @@ import { BACKEND_BASE_URL, DEBUG_MODE } from "../App";
 import { showErrorModal } from "../dialogs/Dialog";
 import { Config, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockListFetchType, StockTrendList } from "./types";
 import { v4 as uuidv4 } from "uuid";
-import { Balance, CashFlow, DateIntervalDataBundle, Dupond, Forcast, Growth, Operation, Profit, QuarterDataBundle, Report } from "./statement-types";
+import { CashFlow, DateIntervalDataBundle, Forcast, GrowthAbility, OperationalCapability, Profitability, QuarterDataBundle, Report, Solvency } from "./statement-types";
 import { makeStockStateUpdateAction, store } from "../state/Manager";
 // import _ from "lodash";
 const axiosErrorHandler = (err: any) => {
@@ -73,7 +73,7 @@ class WindClient {
         return this.fullStockList!;
     }
     public getLocalSimpleStockBasicInfoList() {
-        return this.fullStockList!;
+        return this.simpleStockList!;
     }
     /**
      * Set the config object stored in memory and localStorage
@@ -127,13 +127,14 @@ class WindClient {
         this.vanillaClient.defaults.baseURL = BACKEND_BASE_URL;
         this.wrappedClient.defaults.baseURL = BACKEND_BASE_URL;
 
-        const localToken = window.localStorage.getItem("token");
+        // const localToken = window.localStorage.getItem("token");
         const localConfig: Config | null = JSON.parse(window.localStorage.getItem("config") || "null");
-        if (!localToken || !await this.validateToken(localToken)) {
-            this.token = await this.requestNewToken();
-        } else {
-            this.token = localToken;
-        }
+        // if (!localToken || !await this.validateToken(localToken)) {
+        //     this.token = await this.requestNewToken();
+        // } else {
+        //     this.token = localToken;
+        // }
+        this.token = await this.requestNewToken();
         this.wrappedClient.interceptors.request.use(req => {
             req.headers = { ...req.headers, "Token": this.token };
             return req;
@@ -148,7 +149,7 @@ class WindClient {
             }
         } else this.config = await this.requestDefaultConfig();
         // await this.updateRemoteConfig(this.config!);
-        window.localStorage.setItem("token", this.token);
+        // window.localStorage.setItem("token", this.token);
         window.localStorage.setItem("config", JSON.stringify(this.config));
         this.simpleStockList = await this.getStockList("default");
         this.fullStockList = await this.getStockList("all");
@@ -385,15 +386,15 @@ class WindClient {
     public async getQuarterStockStatement(id: string, year?: number, quarter?: 1 | 2 | 3 | 4): Promise<QuarterDataBundle> {
         const wrapURL = (s: string) => `/api/statement/${s}`;
         let resp = (await axios.all([
-            "profit", "operation", "growth", "balance", "cash-flow", "dupond"
-        ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, year: year, quarter: quarter } }))));
+            "profitability", "operational-capability", "growth-ability", "solvency", "cash-flow"
+        ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, year: year, quarter: quarter } })))).map(i => i.data);
         return {
-            profit: resp[0] as Profit,
-            operation: resp[1] as Operation,
-            growth: resp[2] as Growth,
-            balance: resp[3] as Balance,
+            profitability: resp[0] as Profitability,
+            operationalCapability: resp[1] as OperationalCapability,
+            growthAbility: resp[2] as GrowthAbility,
+            solvency: resp[3] as Solvency,
             cashFlow: resp[4] as CashFlow,
-            dupond: resp[5] as Dupond
+            // dupond: resp[5] as Dupond
         };
     }
     /**
@@ -407,7 +408,7 @@ class WindClient {
         const wrapURL = (s: string) => `/api/statement/${s}`;
         let resp = (await axios.all([
             "report", "forcast"
-        ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, "begin": beginDate, "end": endDate } }))));
+        ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, "begin": beginDate, "end": endDate } })))).map(i => i.data);
         return {
             report: resp[0] as Report,
             forcast: resp[1] as Forcast

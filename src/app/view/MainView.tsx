@@ -4,6 +4,7 @@ import { useBasicDataLoaded } from "../state/Util";
 import QuoteAnalysisView from "./tab/analysis/quote/QuoteAnalysisView";
 import StockView from "./tab/stock/StockView";
 import ConfigView from "./tab/ConfigView";
+// import StatementAnalysisView from "./tab/analysis/statement/StatementAnalysisView";
 const panes = [
     { menuItem: "实时报价", render: () => <Tab.Pane><StockView></StockView></Tab.Pane> },
     { menuItem: "行情分析", render: () => <Tab.Pane><QuoteAnalysisView></QuoteAnalysisView></Tab.Pane> },
@@ -17,7 +18,7 @@ const MainView: React.FC<{}> = () => {
         <Tab
             menu={{
                 pointing: true,
-                widths: 3
+                widths: panes.length
             }}
             panes={panes}
             renderActiveOnly={true}

@@ -49,17 +49,21 @@ const toDateString = (date: Date) => {
 };
 
 const unwrapPercent = (valx: number) => {
-    let val = _.padStart(valx.toString(), 6, "0");
-    const negative = val[0] === '-';
-    if (negative) val = val.substr(1);
+    // let val = _.padStart(valx.toString(), 6, "0");
+    // const negative = val[0] === '-';
+    // if (negative) val = val.substr(1);
 
-    const head = val.substr(0, 2);
-    const tail = val.substr(2);
+    // const head = val.substr(0, 2);
+    // const tail = val.substr(2);
+    // return {
+    //     value: parseFloat(val) / 1e6,
+    //     display: `${negative ? '-' : ''}${head}.${tail}%`
+    // };
+    const newval = valx / 1e6;
     return {
-        value: parseFloat(val) / 1e6,
-        display: `${negative ? '-' : ''}${head}.${tail}%`
-    };
-
+        value: newval,
+        display: (newval * 100).toFixed(2)
+    }
 };
 /**
  * 拆包一个字符串表示的数，返回其浮点值和字符串表示的精确值
@@ -70,7 +74,27 @@ const unwrapPercent = (valx: number) => {
 const unwrapNumber = (num: number, multi10000 = false) => {
     return ({ value: multi10000 ? num / 10000 : num, display: convertNumbers(num, multi10000) });
 }
+/**
+ * Return if d1<=d2
+ * @param d1 
+ * @param d2 
+ */
+const checkValidDateRange = (d1: Date, d2: Date) => {
+    const l1 = DateTime.fromJSDate(d1);
+    const l2 = DateTime.fromJSDate(d2);
+    const diff = l1.diff(l2);
+    if (diff.toMillis() < 0) {
+        return true;
+    } else {
+        return false;
+    }
+};
+const isFutureDate = (d: Date) => {
+    const now = DateTime.now();
+    if (checkValidDateRange(now.toJSDate(), d)) return true;
+    return false;
+};
 // (window as (typeof window) & {f:any}).f=convertNumbers;
-export { useDocumentTitle, convertNumbers, useInputValue, toDateString, unwrapPercent, unwrapNumber };
+export { useDocumentTitle, convertNumbers, useInputValue, toDateString, unwrapPercent, unwrapNumber, isFutureDate, checkValidDateRange };
 
 export type { onChangeType }

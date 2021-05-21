@@ -27,6 +27,7 @@ const StockCandleChart: React.FC<{
     /**
      * 用于绘制K线图
      */
+    console.log(extraData);
     const candleChartData: CandleChartEntry[] = generalData.map(item => ({
         closing: myUnwrapNumber(item.closing, true),
         highest: myUnwrapNumber(item.highest, true),
@@ -54,6 +55,9 @@ const StockCandleChart: React.FC<{
         pbr: unwrapPercent(i.pbr).display,
         tr: unwrapPercent(i.turnoverRate).display,
     }))
+    const tempProcess=(num:number)=>{
+        return (num/1e4).toFixed(2);
+    }
     const combinedData = _.zip(candleChartData, average5Data, volumeData, ratesData || []).map(([a, b, c, d]) => [
         //标签
         a!.label,
@@ -65,17 +69,17 @@ const StockCandleChart: React.FC<{
         收盘: ${a!.closing.f}<br>
         最高: ${a!.highest.f}
         `+ (d !== undefined ? `
-        <br>换手率:${d!.tr}<br>
-        市盈率:${d!.per}<br>
-        市销率:${d!.psr}<br>
-        市现率:${d!.pcfr}<br>
-        市净率:${d!.pbr}
+        <br>换手率:${d!.tr}%<br>
+        市盈率:${d!.per}%<br>
+        市销率:${d!.psr}%<br>
+        市现率:${d!.pcfr}%<br>
+        市净率:${d!.pbr}%
         `: ""),
         //五日均价
         b,
         //成交量
         c!.volume, (a!.opening.v <= a!.closing.v) ? "stroke-color:red;fill-color:red;fill-opacity:0.4" : "fill-color:blue",
-        `${a!.label}<br>成交量:${c!.volume}<br>成交额:<br>${c!.turnover.f}`
+        `${a!.label}<br>成交量:${c!.volume}<br>成交额:<br>${tempProcess(c!.turnover.v)}万元`
     ]);
     // console.log(combinedData);
     const colorModifier = () => {
