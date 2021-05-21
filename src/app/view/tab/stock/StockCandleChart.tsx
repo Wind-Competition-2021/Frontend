@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { ExtraCandleChartData, GeneralCandleChartData } from "../../../client/types";
 import { Chart } from "react-google-charts";
 // import { DateTime } from "luxon";
 import { unwrapNumber, unwrapPercent } from "../../../common/Util";
 import _ from "lodash";
+import { Dimmer, Loader } from "semantic-ui-react";
 
 
 type DataEntry = { v: number; f: string; };
@@ -33,6 +34,7 @@ const StockCandleChart: React.FC<{
         label: item.label,
         opening: myUnwrapNumber(item.opening, true)
     }));
+    const [loading, setLoading] = useState(true);
     const prefixSum: number[] = generalData.map(item => myUnwrapNumber(item.closing, true).v);
     for (let i = 1; i < prefixSum.length; i++) {
         prefixSum[i] += prefixSum[i - 1];
@@ -62,7 +64,7 @@ const StockCandleChart: React.FC<{
         开盘: ${a!.opening.f}<br>
         收盘: ${a!.closing.f}<br>
         最高: ${a!.highest.f}
-        `+ (d!==undefined ? `
+        `+ (d !== undefined ? `
         <br>换手率:${d!.tr}<br>
         市盈率:${d!.per}<br>
         市销率:${d!.psr}<br>
@@ -91,81 +93,87 @@ const StockCandleChart: React.FC<{
     const maxPrice = unwrapNumber(_.max(generalData.map(item => item.highest))!, true).value;
     const minPrice = unwrapNumber(_.min(generalData.map(item => item.lowest))!, true).value;
     const halfLen = (maxPrice - minPrice) / 2;
-    return <Chart
-        className="my-chart"
-        chartType="ComboChart"
-        data={[
-            ["日期", "价格", "开盘价", "收盘价", "最高价", { role: "tooltip", type: "string", p: { html: true } }, "五日均价", "成交量", { role: "style" }, { role: "tooltip", type: "string", p: { html: true } }],
-            ...combinedData
-        ]}
-        options={{
-            tooltip: {
-                isHtml: true
-            },
-            hAxis: { title: "日期" },
-            seriesType: "candlesticks",
-            series: {
-                0: {
-                    targetAxisIndex: 0,
-                    type: "candlesticks",
-                    candlestick: {
-                        fallingColor: {
-                            fill: "blue",//收盘小于开盘，蓝色
-                            stroke: "blue",
-                            strokeWidth: "blue"
+    return <div>
+        <Dimmer active={loading}>
+            <Loader>加载中</Loader>
+        </Dimmer>
+        {loading && <div className="my-chart"></div>}
+        <Chart
+            className="my-chart"
+            chartType="ComboChart"
+            data={[
+                ["日期", "价格", "开盘价", "收盘价", "最高价", { role: "tooltip", type: "string", p: { html: true } }, "五日均价", "成交量", { role: "style" }, { role: "tooltip", type: "string", p: { html: true } }],
+                ...combinedData
+            ]}
+            options={{
+                tooltip: {
+                    isHtml: true
+                },
+                hAxis: { title: "日期" },
+                seriesType: "candlesticks",
+                series: {
+                    0: {
+                        targetAxisIndex: 0,
+                        type: "candlesticks",
+                        candlestick: {
+                            fallingColor: {
+                                fill: "blue",//收盘小于开盘，蓝色
+                                stroke: "blue",
+                                strokeWidth: "blue"
+                            },
+                            risingColor: {
+                                fill: "red",//收盘大于开盘，红色
+                                stroke: "red",
+                                strokeWidth: "red"
+                            }
+                        }
+                    },
+                    1: {
+                        targetAxisIndex: 0,
+                        type: "line",
+                        color: "yellow",
+                    },
+                    2: {
+                        targetAxisIndex: 1,
+                        type: "bars"
+                    }
+                },
+                vAxes: {
+                    0: {
+                        title: "价格",
+                        gridlines: {
+                            color: "transparent"
                         },
-                        risingColor: {
-                            fill: "red",//收盘大于开盘，红色
-                            stroke: "red",
-                            strokeWidth: "red"
+                        viewWindow: {
+                            min: minPrice - halfLen
+                        }
+                    },
+                    1: {
+                        title: "成交量",
+                        gridlines: {
+                            color: "transparent"
+                        },
+                        viewWindow: {
+                            max: maxVolume as number * 4
                         }
                     }
-                },
-                1: {
-                    targetAxisIndex: 0,
-                    type: "line",
-                    color: "yellow"
-                },
-                2: {
-                    targetAxisIndex: 1,
-                    type: "bars"
                 }
-            },
-            vAxes: {
-                0: {
-                    title: "价格",
-                    gridlines: {
-                        color: "transparent"
-                    },
-                    viewWindow: {
-                        min: minPrice - halfLen
-                    }
-                },
-                1: {
-                    title: "成交量",
-                    gridlines: {
-                        color: "transparent"
-                    },
-                    viewWindow: {
-                        max: maxVolume as number * 4
+            }}
+            chartEvents={[
+                {
+                    eventName: "ready",
+                    callback: () => {
+                        setLoading(false);
+                        colorModifier();
+                        document.querySelectorAll(".my-chart").forEach(item => {
+                            item.addEventListener("mousemove", colorModifier);
+                        });
                     }
                 }
-            }
-        }}
-        chartEvents={[
-            {
-                eventName: "ready",
-                callback: () => {
-                    colorModifier();
-                    document.querySelectorAll(".my-chart").forEach(item => {
-                        item.addEventListener("mousemove", colorModifier);
-                    });
-                }
-            }
-        ]}
-
-    >
-    </Chart>;
+            ]}
+        >
+        </Chart>
+    </div>;
 }
 
 export default StockCandleChart;

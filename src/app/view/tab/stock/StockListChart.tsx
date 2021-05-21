@@ -28,7 +28,7 @@ const StockListChart: React.FC<{
                 <tr onDoubleClick={() => {
                     console.log(item.id);
                     setCurrentStock(item.id);
-                }} style={{ cursor: "pointer" }} key={item.id}>
+                }} style={{ cursor: "pointer" }}>
                     {[
                         <>
                             {item.pinned && <Icon name="thumb tack"></Icon>}{i + 1}
@@ -40,7 +40,8 @@ const StockListChart: React.FC<{
                         convertNumbers(item.highest, true),
                         convertNumbers(item.lowest, true),
                         convertNumbers(item.volume),
-                        convertNumbers(item.turnover, true),
+                        // convertNumbers(, true),
+                        (item.turnover / 10000 / 10000).toFixed(2) + "万元",
                         <div>
                             {item.pinned ? <Button size="tiny" color="red" onClick={async () => {
                                 const config = client.getLocalConfig()!;
@@ -67,7 +68,7 @@ const StockListChart: React.FC<{
                             } else {
                                 const { value } = unwrapNumber((item.closing - item.preClosing) / item.preClosing, true);
                                 return <Table.Cell positive={value < 0} negative={value > 0} textAlign="right" key={j}>
-                                    {((item.closing - item.preClosing) / item.preClosing / 100).toFixed(2)}%
+                                    {((item.closing - item.preClosing) / item.preClosing * 100).toFixed(2)}%
                                 </Table.Cell>
 
                             }

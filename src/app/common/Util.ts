@@ -14,7 +14,7 @@ const useDocumentTitle: (title: string) => void = (title: string) => {
     }, [title]);
 };
 
-const convertNumbers = function (valx: number, multi10000 = false) {
+const convertNumbers = function (valx: number, multi10000 = false): string {
     const negative = valx < 0 ? "-" : "";
     if (negative) valx *= -1;
     let val = valx.toString();
@@ -25,7 +25,7 @@ const convertNumbers = function (valx: number, multi10000 = false) {
     if (multi10000) {
         //180000.0000 len=10
         const result = _.trimEnd(((val.slice(0, val.length - 4) || "0") + "." + val.slice(val.length - 4)), "0");
-        if (result.endsWith(".0")) return negative + result + "0";
+        if (result.match(/^.+\.[0-9]$/)) return negative + result + "0";
         else if (result.endsWith(".")) return negative + result + "00"
         else return negative + result;
     } return negative + val;
@@ -71,6 +71,6 @@ const unwrapNumber = (num: number, multi10000 = false) => {
     return ({ value: multi10000 ? num / 10000 : num, display: convertNumbers(num, multi10000) });
 }
 // (window as (typeof window) & {f:any}).f=convertNumbers;
-export { useDocumentTitle, convertNumbers, useInputValue, toDateString, unwrapPercent, unwrapNumber};
+export { useDocumentTitle, convertNumbers, useInputValue, toDateString, unwrapPercent, unwrapNumber };
 
 export type { onChangeType }

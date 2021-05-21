@@ -15,9 +15,30 @@ import StockCandleChart from "./StockCandleChart";
 import SingleStockTrendChart from "./SingleStockTrendChart";
 import { DateTime } from "luxon";
 const stockListComparor = (x: StockListItem, y: StockListItem) => {
-    if (x.pinned === y.pinned) return y.closing - y.preClosing > x.closing - x.preClosing ? 1 : -1;
+    if (x.pinned === y.pinned) return (y.closing - y.preClosing) / y.preClosing > (x.closing - x.preClosing) / x.preClosing ? 1 : -1;
     return x.pinned > y.pinned ? -1 : 1;
 };
+
+function filterStockTrendList(input: StockTrendList): StockTrendList {
+    const result: StockTrendList = [];
+    let lastTime: DateTime | null = null;
+    for (const item of input) {
+        if (result.length === 0) {
+            result.push(item);
+            lastTime = DateTime.fromISO(_.last(result)!.time);
+        } else {
+            const currTime = DateTime.fromISO(item.time);
+            if (currTime.diff(lastTime!).minutes >= 1) {
+                result.push(item);
+            } else {
+                result[result.length - 1] = item;
+            }
+            lastTime = currTime;
+        }
+    }
+    return result;
+}
+
 const StockView: React.FC<{}> = () => {
     useDocumentTitle("实时报价");
     /**
@@ -74,7 +95,8 @@ const StockView: React.FC<{}> = () => {
             console.log("Connecting single socket:", currentStock);
             const token = client.addSingleStockTrendUpdateListener(val => {
                 console.log("single update", val);
-                setStockTrendList(s => [...(s || []), ...val]);
+
+                setStockTrendList(s => _.takeRight(filterStockTrendList([...(s || []), ...val]), 90));
                 setSingleListLoading(false);
             });
             client.getStockDayHistory(currentStock).then(resp => setRealTimeDataByDay(resp));

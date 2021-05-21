@@ -57,7 +57,7 @@ const QuoteAnalysisView: React.FC<{
     const [timeInterval, setTimeInterval] = useState<CandleTypeWrapper<TimeIntervalType, TimeIntervalType, TimeIntervalType>>({
         day: { begin: today.minus({ days: 30 }).toJSDate(), end: today.toJSDate() },
         week: { begin: today.minus({ month: 3 }).toJSDate(), end: today.toJSDate() },
-        month: { begin: today.minus({ month: 6 }).toJSDate(), end: today.toJSDate() },
+        month: { begin: today.minus({ month: 12 }).toJSDate(), end: today.toJSDate() },
     });
     const [dummy, setDummy] = useState(false);
     const [candleType, setCandleType] = useState<CandleChartType>("day");

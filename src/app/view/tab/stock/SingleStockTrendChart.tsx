@@ -1,7 +1,8 @@
 import _ from "lodash";
 import { DateTime } from "luxon";
-import React from "react";
+import React, { useState } from "react";
 import Chart from "react-google-charts";
+import { Dimmer, Loader } from "semantic-ui-react";
 import { StockTrendList } from "../../../client/types";
 import { unwrapNumber } from "../../../common/Util";
 const myUnwrapNumber = (val: number, multi10000: boolean = false) => {
@@ -11,6 +12,7 @@ const myUnwrapNumber = (val: number, multi10000: boolean = false) => {
 const SingleStockTrendChart: React.FC<{
     data: StockTrendList
 }> = ({ data }) => {
+    const [loading, setLoading] = useState(true);
     const priceData = data.map(item => myUnwrapNumber(item.closing, true));
     const volumeData = _.zip(_.tail(data), _.initial(data.map(i => ({ closing: i.closing, volume: i.volume })))).map(([item, pre]) => [
         item!.volume - pre!.volume,
@@ -26,32 +28,49 @@ const SingleStockTrendChart: React.FC<{
     const maxPrice = _.max(priceData.map(i => i.v))!;
     const minPrice = _.min(priceData.map(i => i.v))!;
     const halfLen = (maxPrice - minPrice) / 2;
-    return <Chart
-        className="my-chart"
-        chartType="ComboChart"
-        data={[
-            ["时间", "成交价", "成交量", { role: "style" }],
-            ...combinedData
-        ]}
-        options={{
-            hAxis: { title: "时间" },
-            series: {
-                0: {
-                    targetAxisIndex: 0,
-                    type: "lines",
-                    color: "black"
+    return <div>
+        <Dimmer active={loading}>
+            <Loader>加载中</Loader>
+        </Dimmer>
+        {loading && <div className="my-chart"></div>}
+        <Chart
+            className="my-chart"
+            chartType="ComboChart"
+            data={[
+                ["时间", "成交价", "成交量", { role: "style" }],
+                ...(combinedData.length === 0 ? [["0", 0, 0, ""]] : combinedData)
+            ]}
+            options={{
+                hAxis: { title: "时间" },
+                series: {
+                    0: {
+                        targetAxisIndex: 0,
+                        type: "lines",
+                        color: "black",
+                        lineWidth: 1,
+                        // curveType: 'function'
+                    },
+                    1: {
+                        targetAxisIndex: 1,
+                        type: "bars"
+                    }
                 },
-                1: {
-                    targetAxisIndex: 1,
-                    type: "bars"
+                vAxes: {
+                    0: { title: "价格", gridlines: { color: "transparent" }, viewWindow: { min: minPrice - halfLen } },
+                    1: { title: "成交量", gridlines: { color: "transparent" }, viewWindow: { max: maxVolume! * 5 } }
                 }
-            },
-            vAxes: {
-                0: { title: "价格", gridlines: { color: "transparent" }, viewWindow: { min: minPrice - halfLen } },
-                1: { title: "成交量", gridlines: { color: "transparent" }, viewWindow: { max: maxVolume! * 5 } }
-            }
-        }}
-    ></Chart>;
+            }}
+            chartEvents={[
+                {
+                    eventName: "ready",
+                    callback: () => {
+                        setLoading(false);
+                    }
+                }
+
+            ]}
+        ></Chart>
+    </div>;
 }
 
 export default SingleStockTrendChart;
