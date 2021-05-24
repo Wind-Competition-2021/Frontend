@@ -199,7 +199,7 @@ class WindClient {
                 showErrorModal("股票列表已经停止刷新，这个可能是因为当前超过了交易时间。");
                 store.dispatch(makeStockStateUpdateAction({ tradingTime: false }));
             } else if (ev.code !== 1000) {
-                showErrorModal(`WebSocket连接已断开: ${ev.code}`)
+                showErrorModal(`WebSocket连接已断开: ${ev.code} - ${ev.reason}`)
             }
         };
     }
