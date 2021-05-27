@@ -1,7 +1,7 @@
 import { useDocumentTitle } from "../../../common/Util";
-import { Divider, Input, Grid, Dimmer, Placeholder, Loader } from "semantic-ui-react";
+import { Divider, Input, Grid, Dimmer, Placeholder, Loader, Checkbox } from "semantic-ui-react";
 import { client } from "../../../client/WindClient";
-import { RealTimeDataByDay, StockBasicInfo, StockList, StockListItem, StockTrendList } from "../../../client/types";
+import { StockBasicInfo, StockList, StockListItem, StockTrendList } from "../../../client/types";
 import { Layout } from "./StockViewLayout";
 import "./StockView.css"
 import _ from "lodash";
@@ -11,9 +11,10 @@ import { useEffect, useState } from "react";
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { makeCurrentStockAction, StateType } from "../../../state/Manager";
-import StockCandleChart from "./StockCandleChart";
+import { WrappedStockCandleChart } from "./StockCandleChart";
 import SingleStockTrendChart from "./SingleStockTrendChart";
 import { DateTime } from "luxon";
+import { useDarkMode } from "../../../state/Util";
 const stockListComparor = (x: StockListItem, y: StockListItem) => {
     if (x.pinned === y.pinned) return (y.closing - y.preClosing) / y.preClosing > (x.closing - x.preClosing) / x.preClosing ? 1 : -1;
     return x.pinned > y.pinned ? -1 : 1;
@@ -28,9 +29,6 @@ function filterStockTrendList(input: StockTrendList): StockTrendList {
             lastTime = DateTime.fromISO(_.last(result)!.time).set({ second: 0 });
         } else {
             const currTime = DateTime.fromISO(item.time).set({ second: 0 });
-            // console.log("last", lastTime);
-            // console.log("curr", currTime);
-            // console.log("diff", currTime.diff(lastTime!, "minutes"));
             if (currTime.diff(lastTime!, "minutes").minutes >= 1) {
                 result.push(item);
             } else {
@@ -53,10 +51,6 @@ const StockView: React.FC<{}> = () => {
      */
     const [currentStock, setCurrentStock] = useState<string | null>(null);
     /**
-     * 用以绘制日K线
-     */
-    const [realTimeDataByDay, setRealTimeDataByDay] = useState<RealTimeDataByDay[] | null>(null);
-    /**
      * 用以展示实时情况
      */
     const [stockTrendList, setStockTrendList] = useState<StockTrendList | null>(null);
@@ -70,6 +64,7 @@ const StockView: React.FC<{}> = () => {
         dispatch(makeCurrentStockAction(text));
     }, [dispatch]);
     const inTradeTime = useSelector((s: StateType) => s.stockState.tradingTime);
+    const [darkMode, setDarkMode] = useDarkMode();
 
     /**
      * 页面加载完成，添加一个总的接受股票列表更新的监听器
@@ -102,7 +97,6 @@ const StockView: React.FC<{}> = () => {
                 setStockTrendList(s => _.takeRight(filterStockTrendList([...(s || []), ...val]), 90));
                 setSingleListLoading(false);
             });
-            client.getStockDayHistory(currentStock).then(resp => setRealTimeDataByDay(resp));
 
             return () => {
                 client.removeSingleStockTrendUpdateListener(token);
@@ -119,10 +113,9 @@ const StockView: React.FC<{}> = () => {
         setMatchedStocks(_.take(client
             .getLocalSimpleStockBasicInfoList().filter(x => (x.id.includes(searchText) || x.name.includes(searchText))), 100));
         setShowingSearchModal(true);
-
     };
     return <>
-        <div>
+        <div className={darkMode ? "dark-mode" : ""}>
             <Dimmer active={!inTradeTime}>
                 <div>当前不在交易时间，本页面已停用。请前往行情分析页面。</div>
             </Dimmer>
@@ -146,22 +139,17 @@ const StockView: React.FC<{}> = () => {
                     }}>
                     </input>}></Input>
                 </Grid.Column>
-                <Grid.Column />
+                <Grid.Column >
+                    <Checkbox toggle checked={darkMode} onChange={(_, d) => setDarkMode(d.checked!)} label="暗色模式"></Checkbox>
+                </Grid.Column>
             </Grid>
             <Divider></Divider>
             <Layout
                 name="default"
                 candleChart={
                     (() => {
-                        if (singleListLoading && inTradeTime) {
-                            return <Dimmer active>
-                                <Loader>加载中</Loader>
-                            </Dimmer>
-                        }
                         if (inTradeTime) {
-                            return realTimeDataByDay ? <StockCandleChart generalData={realTimeDataByDay.map(item => ({
-                                ...item, label: DateTime.fromISO(item.date).toFormat("MM/dd")
-                            }))}></StockCandleChart> : <div></div>;
+                            return currentStock ? <WrappedStockCandleChart stock={currentStock} key={currentStock}></WrappedStockCandleChart> : <div></div>;
                         } else {
                             return <Placeholder>
                                 {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
@@ -188,7 +176,6 @@ const StockView: React.FC<{}> = () => {
                                 {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
                             </Placeholder>;
                         }
-
                     })()
                 }
                 stockList={

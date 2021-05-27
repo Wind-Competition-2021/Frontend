@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { ExtraCandleChartData, GeneralCandleChartData } from "../../../client/types";
-import { Chart } from "react-google-charts";
-// import { DateTime } from "luxon";
 import { unwrapNumber, unwrapPercent } from "../../../common/Util";
 import _ from "lodash";
 import { Dimmer, Loader } from "semantic-ui-react";
 
-
-type DataEntry = { v: number; f: string; };
-
+import ReactECharts from "echarts-for-react";
+import { useEffect } from "react";
+import { client } from "../../../client/WindClient";
+import { DateTime } from "luxon";
+import { useDarkModeValue } from "../../../state/Util";
+type DataEntry = { name: string; value: number };
 interface CandleChartEntry {
     label: string;
     opening: DataEntry;
@@ -18,16 +19,55 @@ interface CandleChartEntry {
 };
 const myUnwrapNumber = (val: number, multi10000: boolean = false) => {
     const { value, display } = unwrapNumber(val, multi10000);
-    return ({ v: value, f: display });
+    return ({ value: value, name: display }) as DataEntry;
 }
+
+const WrappedStockCandleChart: React.FC<{
+    stock: string;
+
+}> = React.memo(({ stock }) => {
+    const [loaded, setLoaded] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState<GeneralCandleChartData | null>(null);
+    useEffect(() => {
+        if (!loaded) {
+            (async () => {
+                setLoading(true);
+                try {
+                    const resp = await client.getStockDayHistory(stock);
+                    setData(resp.map(item => ({
+                        ...item, label: DateTime.fromISO(item.date).toFormat("MM/dd")
+                    })))
+                    setLoading(false);
+                    setLoaded(true);
+
+                } catch (e) {
+                    throw e;
+                } finally {
+                    setLoading(false);
+                }
+
+            })();
+        }
+    }, [loaded, stock]);
+    return <div>
+        {(!loaded) ? <div className="my-charts">
+            <Dimmer active={loading}>
+                <Loader>加载中</Loader>
+            </Dimmer>
+        </div> : <StockCandleChart generalData={data!}></StockCandleChart>}
+    </div>
+});
+
 const StockCandleChart: React.FC<{
     generalData: GeneralCandleChartData
     extraData?: ExtraCandleChartData
 }> = ({ generalData, extraData }) => {
+    const darkMode = useDarkModeValue();
     /**
      * 用于绘制K线图
      */
-    console.log(extraData);
+    // console.log(extraData);
     const candleChartData: CandleChartEntry[] = generalData.map(item => ({
         closing: myUnwrapNumber(item.closing, true),
         highest: myUnwrapNumber(item.highest, true),
@@ -36,14 +76,14 @@ const StockCandleChart: React.FC<{
         opening: myUnwrapNumber(item.opening, true)
     }));
     const [loading, setLoading] = useState(true);
-    const prefixSum: number[] = generalData.map(item => myUnwrapNumber(item.closing, true).v);
+    const prefixSum: number[] = generalData.map(item => myUnwrapNumber(item.closing, true).value);
     for (let i = 1; i < prefixSum.length; i++) {
         prefixSum[i] += prefixSum[i - 1];
     }
     /**
      * 用于绘制K线图的5日均价
      */
-    const average5Data = prefixSum.map((x, i) => (x - (i <= 4 ? 0 : prefixSum[i - 5])) / (i <= 4 ? (i + 1) : 5));
+    const average5Data = prefixSum.map((x, i) => (x - (i <= 4 ? 0 : prefixSum[i - 5])) / (i <= 4 ? (i + 1) : 5)).map(x => ({ name: x.toFixed(2), value: x }));
     const volumeData = generalData.map(item => ({
         volume: item.volume,
         turnover: myUnwrapNumber(item.turnover, true)
@@ -55,129 +95,123 @@ const StockCandleChart: React.FC<{
         pbr: unwrapPercent(i.pbr).display,
         tr: unwrapPercent(i.turnoverRate).display,
     }))
-    const tempProcess=(num:number)=>{
-        return (num/1e4).toFixed(2);
-    }
-    const combinedData = _.zip(candleChartData, average5Data, volumeData, ratesData || []).map(([a, b, c, d]) => [
-        //标签
-        a!.label,
-        //K线
-        a!.lowest, a!.opening, a!.closing, a!.highest,
-        `${a!.label}<br>
-        最低: ${a!.lowest.f}<br>
-        开盘: ${a!.opening.f}<br>
-        收盘: ${a!.closing.f}<br>
-        最高: ${a!.highest.f}
-        `+ (d !== undefined ? `
-        <br>换手率:${d!.tr}%<br>
-        市盈率:${d!.per}%<br>
-        市销率:${d!.psr}%<br>
-        市现率:${d!.pcfr}%<br>
-        市净率:${d!.pbr}%
-        `: ""),
-        //五日均价
-        b,
-        //成交量
-        c!.volume, (a!.opening.v <= a!.closing.v) ? "stroke-color:red;fill-color:red;fill-opacity:0.4" : "fill-color:blue",
-        `${a!.label}<br>成交量:${c!.volume}<br>成交额:<br>${tempProcess(c!.turnover.v)}万元`
-    ]);
-    // console.log(combinedData);
-    const colorModifier = () => {
-        document.querySelectorAll("rect[width='2']").forEach(item => {
-            // console.log("modify", item);
-            const majorRect = item.nextSibling as (Element | null);
-            if (majorRect) {
-                const color = majorRect.getAttribute("fill");
-                item.setAttribute("fill", color || "");
-            }
-
-        });
-    };
+    const combinedCandleData = candleChartData.map(x => [x.opening, x.closing, x.lowest, x.highest].map(i => i.value));
     const maxVolume = _.max(volumeData.map(t => t.volume));
     const maxPrice = unwrapNumber(_.max(generalData.map(item => item.highest))!, true).value;
     const minPrice = unwrapNumber(_.min(generalData.map(item => item.lowest))!, true).value;
     const halfLen = (maxPrice - minPrice) / 2;
+    const combinedVolumeData = _.zip(volumeData, candleChartData).map(([x, y]) => ({
+        value: x!.volume,
+        itemStyle: (y!.opening.value <= y!.closing.value) ? ({ color: "red", borderColor: "red", borderWidth: 1, opacity: 0.5 }) : ({ color: "blue" })
+
+    }));
     return <div>
         <Dimmer active={loading}>
             <Loader>加载中</Loader>
         </Dimmer>
         {loading && <div className="my-chart"></div>}
-        <Chart
-            className="my-chart"
-            chartType="ComboChart"
-            data={[
-                ["日期", "价格", "开盘价", "收盘价", "最高价", { role: "tooltip", type: "string", p: { html: true } }, "五日均价", "成交量", { role: "style" }, { role: "tooltip", type: "string", p: { html: true } }],
-                ...combinedData
-            ]}
-            options={{
+        <ReactECharts
+            className="my-charts"
+            onEvents={{
+                finished: () => setLoading(false)
+            }}
+            option={{
+                darkMode: darkMode,
                 tooltip: {
-                    isHtml: true
+                    trigger: 'item',
+                    axisPointer: {
+                        type: 'cross'
+                    }
                 },
-                hAxis: { title: "日期" },
-                seriesType: "candlesticks",
-                series: {
-                    0: {
-                        targetAxisIndex: 0,
-                        type: "candlesticks",
-                        candlestick: {
-                            fallingColor: {
-                                fill: "blue",//收盘小于开盘，蓝色
-                                stroke: "blue",
-                                strokeWidth: "blue"
-                            },
-                            risingColor: {
-                                fill: "red",//收盘大于开盘，红色
-                                stroke: "red",
-                                strokeWidth: "red"
+                legend: {
+                    data: ["K线图", "五日均线", "成交量"]
+                },
+                xAxis: {
+                    type: "category",
+                    data: candleChartData.map(i => i.label),
+                    scale: true,
+                    min: "dataMin",
+                    max: "dataMax",
+                },
+                yAxis: [
+                    {
+                        name: "价格",
+                        scale: true,
+                        min: Math.round(minPrice - halfLen)
+                    },
+                    {
+                        name: "成交量",
+                        scale: true,
+                        max: maxVolume as number * 2
+                    }
+                ],
+                dataZoom: [
+                    {
+                        show: true,
+                        type: 'slider',
+                        top: '90%',
+                        start: 0,
+                        end: 100
+                    }
+                ],
+                series: [
+                    {
+                        name: "K线图",
+                        type: "candlestick",
+                        data: combinedCandleData,
+                        yAxisIndex: 0,
+                        tooltip: {
+                            formatter(params: any, ticket: any) {
+                                // console.log(params,ticket);
+                                const values = params.value as number[];
+                                const index = values[0];
+                                const item = candleChartData[index];
+                                const extra = ratesData ? ratesData[index] : undefined;
+                                return `${item.label}<br>
+                                    最低: ${item.lowest.name}<br>
+                                    开盘: ${item.opening.name}<br>
+                                    收盘: ${item.closing.name}<br>
+                                    最高: ${item.highest.name}` + (extra !== undefined ? `
+                                    <br><br>换手率:${extra.tr}%<br>
+                                        市盈率:${extra.per}%<br>
+                                        市销率:${extra.psr}%<br>
+                                        市现率:${extra.pcfr}%<br>
+                                        市净率:${extra.pbr}%
+                                        `: "");
                             }
                         }
                     },
-                    1: {
-                        targetAxisIndex: 0,
+                    {
+                        name: "五日均线",
                         type: "line",
-                        color: "yellow",
-                    },
-                    2: {
-                        targetAxisIndex: 1,
-                        type: "bars"
-                    }
-                },
-                vAxes: {
-                    0: {
-                        title: "价格",
-                        gridlines: {
-                            color: "transparent"
+                        data: average5Data,
+                        lineStyle: {
+                            color: "yellow"
                         },
-                        viewWindow: {
-                            min: minPrice - halfLen
+                        yAxisIndex: 0,
+                        showSymbol: false,
+                        tooltip: {
+                            formatter(params: any) {
+                                const index = params.dataIndex as number;
+                                const label = candleChartData[index].label;
+                                const average5 = average5Data[index].name;
+                                return `${label}<br>五日均价: ${average5}`;
+                            }
                         }
                     },
-                    1: {
-                        title: "成交量",
-                        gridlines: {
-                            color: "transparent"
-                        },
-                        viewWindow: {
-                            max: maxVolume as number * 4
-                        }
+                    {
+                        name: "成交量",
+                        type: "bar",
+                        yAxisIndex: 1,
+                        data: combinedVolumeData
                     }
-                }
+                ]
             }}
-            chartEvents={[
-                {
-                    eventName: "ready",
-                    callback: () => {
-                        setLoading(false);
-                        colorModifier();
-                        document.querySelectorAll(".my-chart").forEach(item => {
-                            item.addEventListener("mousemove", colorModifier);
-                        });
-                    }
-                }
-            ]}
-        >
-        </Chart>
+        ></ReactECharts>
     </div>;
 }
 
-export default StockCandleChart;
+export {
+    WrappedStockCandleChart,
+    StockCandleChart
+};

@@ -11,7 +11,7 @@ import DayPickerInput from "react-day-picker/DayPickerInput"
 import QuoteAnalysisStockDetail from "./QuoteAnalysisStockDetail";
 // import QuoteAnalysisStockChart from "./QuoteAnalysisStockChart";
 import { showErrorModal } from "../../../../dialogs/Dialog";
-import StockCandleChart from "../../stock/StockCandleChart";
+import {StockCandleChart} from "../../stock/StockCandleChart";
 
 type CandleChartType = "day" | "week" | "month";
 type TimeIntervalType = { begin: Date; end: Date };

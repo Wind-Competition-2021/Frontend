@@ -16,9 +16,16 @@ const useDarkMode = () => {
     return [value, update] as [typeof value, typeof update];
 };
 
+const useDarkModeValue = () => {
+    const value = useSelector((state: StateType) => state.viewState.darkModeEnabled);
+    return value;
+};
+const useUnDarkModeValue = () => {
+    return !useDarkModeValue();
+};
 const useBasicDataLoaded = () => {
     const value = useSelector((state: StateType) => state.dataState.loaded);
     return value;
 };
 
-export { useDarkMode, useBasicDataLoaded };
+export { useDarkMode, useBasicDataLoaded, useDarkModeValue, useUnDarkModeValue };

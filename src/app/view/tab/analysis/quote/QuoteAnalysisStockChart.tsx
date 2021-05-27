@@ -3,7 +3,7 @@ import React from "react";
 import { Grid, Header, Table } from "semantic-ui-react";
 import { RealTimeDataByDay, RealTimeDataByWeek } from "../../../../client/types";
 import { convertNumbers, unwrapPercent } from "../../../../common/Util";
-import StockCandleChart from "../../stock/StockCandleChart";
+import {StockCandleChart} from "../../stock/StockCandleChart";
 
 const QuoteAnalysisStockChart: React.FC<{
     realTimeDataByDay: RealTimeDataByDay[];

@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "axios": "^0.21.0",
+    "echarts": "^5.1.1",
+    "echarts-for-react": "^3.0.1",
     "lodash": "^4.17.20",
     "luxon": "^1.27.0",
     "react": "^17.0.1",
@@ -24,7 +26,6 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
-    "@types/cytoscape": "^3.14.12",
     "@types/lodash": "^4.14.168",
     "@types/luxon": "^1.26.5",
     "@types/react": "^17.0.0",

@@ -1,76 +1,123 @@
 import _ from "lodash";
 import { DateTime } from "luxon";
 import React, { useState } from "react";
-import Chart from "react-google-charts";
 import { Dimmer, Loader } from "semantic-ui-react";
 import { StockTrendList } from "../../../client/types";
 import { unwrapNumber } from "../../../common/Util";
+import ReactECharts from "echarts-for-react";
+import { useDarkModeValue } from "../../../state/Util";
 const myUnwrapNumber = (val: number, multi10000: boolean = false) => {
     const { value, display } = unwrapNumber(val, multi10000);
-    return ({ v: value, f: display });
+    return ({ value: value, name: display });
 }
 const SingleStockTrendChart: React.FC<{
     data: StockTrendList
-}> = ({ data }) => {
+}> = React.memo(({ data }) => {
+    const darkMode = useDarkModeValue();
     const [loading, setLoading] = useState(true);
     const priceData = data.map(item => myUnwrapNumber(item.closing, true));
-    const volumeData = _.zip(_.tail(data), _.initial(data.map(i => ({ closing: i.closing, volume: i.volume })))).map(([item, pre]) => [
-        item!.volume - pre!.volume,
-        (item!.closing >= pre!.closing) ? (
-            (item!.closing === pre!.closing) ?
-                "fill-color:black;stroke-color:black;stroke-width:0" :
-                "fill-color:red;stroke-color:black;stroke-width:0"
-        ) : "fill-color:green;stroke-color:black;stroke-width:0"
-    ])
-    const maxVolume = _.max(volumeData.map(t => t[0])) as number;
-    const timeList = data.map((item, i) => DateTime.fromISO(item.time).toFormat("HH:mm"));
-    const combinedData = _.zip(_.tail(timeList), _.tail(priceData), volumeData).map(([a, b, c]) => [a, b, ...c!]);
-    const maxPrice = _.max(priceData.map(i => i.v))!;
-    const minPrice = _.min(priceData.map(i => i.v))!;
+
+    // const maxVolume = _.max(data.map(t => t.volume)) as number;
+    const timeList = data.map((item) => DateTime.fromISO(item.time).toFormat("HH:mm"));
+    const maxPrice = _.max(priceData.map(i => i.value))!;
+    const minPrice = _.min(priceData.map(i => i.value))!;
     const halfLen = (maxPrice - minPrice) / 2;
+    const combinedVolumeData = _.zip(_.tail(data), _.initial(data.map(i => ({ closing: i.closing, volume: i.volume })))).map(([item, pre]) => {
+        const diff = item!.volume - pre!.volume;
+        const priceDiff = item!.closing - pre!.closing;
+        if (priceDiff === 0) {
+            return ({
+                value: diff,
+                itemStyle: {
+                    color: darkMode ? "white" : "black"
+                }
+            })
+        } else if (priceDiff > 0) {
+            return ({
+                value: diff,
+                itemStyle: {
+                    color: "red"
+                }
+            })
+        } else {
+            return ({
+                value: diff,
+                itemStyle: {
+                    color: "green"
+                }
+            })
+        }
+    }
+    );
     return <div>
         <Dimmer active={loading}>
             <Loader>加载中</Loader>
         </Dimmer>
         {loading && <div className="my-chart"></div>}
-        <Chart
-            className="my-chart"
-            chartType="ComboChart"
-            data={[
-                ["时间", "成交价", "成交量", { role: "style" }],
-                ...(combinedData.length === 0 ? [["0", 0, 0, ""]] : combinedData)
-            ]}
-            options={{
-                hAxis: { title: "时间" },
-                series: {
-                    0: {
-                        targetAxisIndex: 0,
-                        type: "lines",
-                        color: "black",
-                        lineWidth: 1,
-                        // curveType: 'function'
-                    },
-                    1: {
-                        targetAxisIndex: 1,
-                        type: "bars"
+        <ReactECharts
+            className="my-charts"
+            onEvents={{
+                finished: () => setLoading(false)
+            }}
+            option={{
+                darkMode: darkMode,
+                tooltip: {
+                    trigger: 'item',
+                    axisPointer: {
+                        type: 'cross'
                     }
                 },
-                vAxes: {
-                    0: { title: "价格", gridlines: { color: "transparent" }, viewWindow: { min: minPrice - halfLen } },
-                    1: { title: "成交量", gridlines: { color: "transparent" }, viewWindow: { max: maxVolume! * 5 } }
-                }
-            }}
-            chartEvents={[
-                {
-                    eventName: "ready",
-                    callback: () => {
-                        setLoading(false);
+                legend: {
+                    data: ["成交价", "成交量"]
+                },
+                xAxis: {
+                    type: "category",
+                    data: timeList,
+                    scale: true,
+                    min: "dataMin",
+                    max: "dataMax",
+                },
+                yAxis: [
+                    {
+                        name: "价格",
+                        min: Math.round(minPrice - halfLen)
+                    },
+                    {
+                        name: "成交量",
+                        // max: maxVolume!
                     }
-                }
+                ],
+                dataZoom: [
+                    {
+                        show: true,
+                        type: 'slider',
+                        top: '90%',
+                        start: 0,
+                        end: 100
+                    }
+                ],
+                series: [
+                    {
+                        name: "成交价",
+                        yAxisIndex: 0,
+                        type: "line",
+                        data: priceData,
+                        lineStyle: {
+                            color: darkMode ? "white" : "black"
+                        },
+                        showSymbol: false,
+                    },
+                    {
+                        name: "成交量",
+                        yAxisIndex: 1,
+                        type: "bar",
+                        data: combinedVolumeData
 
-            ]}
-        ></Chart>
+                    }
+                ]
+            }}
+        ></ReactECharts>
     </div>;
-}
+});
 
 export default SingleStockTrendChart;

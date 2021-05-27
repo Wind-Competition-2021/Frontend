@@ -12,14 +12,18 @@ interface LayoutArgs {
 type LayoutProps = { name: string } & LayoutArgs;
 const makeDefaultLayout: (args: LayoutArgs) => React.ReactElement = ({ candleChart, singleTrend, stockList }) => {
     return (<Grid columns="1">
-        <Grid.Column children={<>
+        <Grid.Column>
             {stockList}
             <Divider></Divider>
-        </>} />
+        </Grid.Column>
         <Grid.Column>
             <Grid columns="2">
-                <Grid.Column children={singleTrend} />
-                <Grid.Column children={candleChart} />
+                <Grid.Column >
+                    {singleTrend}
+                </Grid.Column>
+                <Grid.Column>
+                    {candleChart}
+                </Grid.Column>
             </Grid>
         </Grid.Column>
     </Grid>)
