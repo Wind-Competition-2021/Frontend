@@ -5,6 +5,7 @@ import {
 import { StockList, StockListItem } from "../../../client/types";
 import { client } from "../../../client/WindClient";
 import { convertNumbers, unwrapNumber } from "../../../common/Util";
+import { useDarkModeValue } from "../../../state/Util";
 
 /**
  * 渲染股票总信息上的一行
@@ -23,6 +24,7 @@ const StockListChart: React.FC<{
 }> = ({
     currentStock, setCurrentStock, stockList, refreshPinnedStocks
 }) => {
+        const darkMode = useDarkModeValue();
         const renderStockListLine = (item: StockListItem, i: number) => {
             return (<Table.Row key={item.id} cells={[{ active: item.id === currentStock }]} as={() => (
                 <tr onDoubleClick={() => {
@@ -77,8 +79,11 @@ const StockListChart: React.FC<{
             )} />
             );
         }
-        return <div style={{ overflowY: "scroll", maxHeight: "400px" }
-        }>
+        return <div
+            style={{ overflowY: "scroll", maxHeight: "400px" }
+            }
+            className={darkMode ? "dark-mode" : ""}
+        >
             <Table>
                 <Table.Header>
                     <Table.Row>

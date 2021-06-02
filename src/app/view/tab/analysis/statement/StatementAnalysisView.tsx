@@ -2,6 +2,7 @@
 import axios from "axios";
 import { DateTime } from "luxon";
 import React, { useState } from "react";
+import { useEffect } from "react";
 import DayPickerInput from "react-day-picker/DayPickerInput";
 import { Button, Dimmer, Divider, Form, Grid, Input, Loader, Menu } from "semantic-ui-react";
 import { DateIntervalDataBundle, Quarter, QuarterDataBundle, StatementType, typeMapping, typeSequence } from "../../../../client/statement-types";
@@ -42,6 +43,7 @@ const StatementAnalysisView: React.FC<{
     const [currentTab, setCurrentTab] = useState<StatementType>("profitability");
     const [dateBundle, setDateBundle] = useState<DateIntervalDataBundle | null>(null);
     const [quarterBundle, setQuarterBundle] = useState<QuarterDataBundle | null>(null);
+    const [dataLoaded, setDataLoaded] = useState(false);
     const fetchData = async () => {
         if (!checkValidDateRange(beginDate, endDate)) {
             showErrorModal("开始日期不得晚于结束日期");
@@ -59,13 +61,18 @@ const StatementAnalysisView: React.FC<{
             ])) as [DateIntervalDataBundle, QuarterDataBundle];
             setDateBundle(dateBundle);
             setQuarterBundle(quarterBundle);
-
+            setDataLoaded(true);
         } catch (e) {
             throw e;
         } finally {
             setFetching(false);
         }
     };
+    useEffect(() => {
+        if (currentStock !== null)
+            fetchData();
+        // eslint-disable-next-line
+    }, [currentStock]);
     return <Grid columns="1">
         <Grid.Column >
             <AnalysisStockSearch
@@ -156,11 +163,11 @@ const StatementAnalysisView: React.FC<{
                                 <Divider></Divider>
                             </Grid.Column>
                             <Grid.Column>
-                                <StatementTableView
+                                {dataLoaded && <StatementTableView
                                     dateBundle={dateBundle!}
                                     quarterBundle={quarterBundle!}
                                     type={currentTab}
-                                ></StatementTableView>
+                                ></StatementTableView>}
                             </Grid.Column>
                         </Grid>
                     </Grid.Column>

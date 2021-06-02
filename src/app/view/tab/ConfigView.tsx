@@ -4,10 +4,12 @@ import { client } from "../../client/WindClient";
 import { Button, Form, Divider, Grid, Table, Header } from "semantic-ui-react";
 import { showSuccessModal } from "../../dialogs/Dialog";
 import { useDocumentTitle } from "../../common/Util";
+import { useDarkMode } from "../../state/Util";
 const ConfigView: React.FC<{}> = () => {
     const [loaded, setLoaded] = useState(false);
     const [config, setConfig] = useState<Config | null>(null);
     const [sending, setSending] = useState(false);
+    const [darkMode, setDarkMode] = useDarkMode();
     useDocumentTitle("设置");
     useEffect(() => {
         if (!loaded) {
@@ -53,7 +55,7 @@ const ConfigView: React.FC<{}> = () => {
                         >
                         </input>} >
                         </Form.Input>
-
+                        <Form.Checkbox toggle checked={darkMode} onChange={(_, d) => setDarkMode(d.checked!)} label="暗色模式"></Form.Checkbox>
                     </Form>
                 </Grid.Column>
                 <Grid.Column width="12">

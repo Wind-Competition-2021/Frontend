@@ -22,3 +22,7 @@ table {
 .dark-mode {
     filter: invert(1)
 }
+
+.most-top {
+    z-index: 9999 !important;
+}

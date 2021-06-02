@@ -11,7 +11,9 @@ const defaultState = {
     currentStock: ""
   },
   stockState: {
-    tradingTime: false
+    tradingTime: false,
+    replaying: false,
+    errorFetchingTradingTime: false
   }
 };
 export type StateType = typeof defaultState;

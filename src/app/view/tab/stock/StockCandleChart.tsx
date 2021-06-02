@@ -116,6 +116,7 @@ const StockCandleChart: React.FC<{
                 finished: () => setLoading(false)
             }}
             option={{
+                backgroundColor: darkMode ? "black" : "white",
                 darkMode: darkMode,
                 tooltip: {
                     trigger: 'item',
@@ -137,12 +138,14 @@ const StockCandleChart: React.FC<{
                     {
                         name: "价格",
                         scale: true,
-                        min: Math.round(minPrice - halfLen)
+                        min: Math.round(minPrice - halfLen),
+                        splitLine: { show: false }
                     },
                     {
                         name: "成交量",
                         scale: true,
-                        max: maxVolume as number * 2
+                        max: maxVolume as number * 2,
+                        splitLine: { show: false }
                     }
                 ],
                 dataZoom: [

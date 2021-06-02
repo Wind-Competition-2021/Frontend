@@ -61,6 +61,7 @@ const SingleStockTrendChart: React.FC<{
             }}
             option={{
                 darkMode: darkMode,
+                backgroundColor: darkMode ? "black" : "white",
                 tooltip: {
                     trigger: 'item',
                     axisPointer: {
@@ -80,10 +81,12 @@ const SingleStockTrendChart: React.FC<{
                 yAxis: [
                     {
                         name: "价格",
-                        min: Math.round(minPrice - halfLen)
+                        min: Math.round(minPrice - halfLen),
+                        splitLine: { show: false }
                     },
                     {
                         name: "成交量",
+                        splitLine: { show: false }
                         // max: maxVolume!
                     }
                 ],

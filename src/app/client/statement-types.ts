@@ -4,66 +4,66 @@ interface StatementBase {
     statDeadline: string;
 }
 interface Profitability extends StatementBase {
-    roe: string;
-    npm: string;
-    gpm: string;
+    roe: number;
+    npm: number;
+    gpm: number;
     np: number;
-    eps: string;
+    eps: number;
     mbr: number;
     ts: number;
     cs: number;
 };
 interface OperationalCapability extends StatementBase {
-    rtr: string;
-    rtd: string;
-    itr: string;
-    itd: string;
-    catr: string;
-    tatr: string;
+    rtr: number;
+    rtd: number;
+    itr: number;
+    itd: number;
+    catr: number;
+    tatr: number;
 };
 interface GrowthAbility extends StatementBase {
-    nagr: string;
-    tagr: string;
-    npgr: string;
-    bepsgr: string;
-    npasgr: string;
+    nagr: number;
+    tagr: number;
+    npgr: number;
+    bepsgr: number;
+    npasgr: number;
 };
 interface Solvency extends StatementBase {
-    cr: string;
-    qr: string;
-    car: string;
-    tlgr: string;
-    dar: string;
-    em: string;
+    cr: number;
+    qr: number;
+    car: number;
+    tlgr: number;
+    dar: number;
+    em: number;
 };
 interface CashFlow extends StatementBase {
-    catar: string;
-    fatar: string;
-    tatar: string;
-    ipm: string;
-    oncforr: string;
-    oncfnpr: string;
-    oncfgrr: string;
+    catar: number;
+    fatar: number;
+    tatar: number;
+    ipm: number;
+    oncforr: number;
+    oncfnpr: number;
+    oncfgrr: number;
 
 };
 // interface Dupond extends StatementBase {
 
 // };
-interface Report extends StatementBase {
+interface PerformanceReport extends StatementBase {
     updateDate: string;
-    ta: string;
-    na: string;
-    epsgr: string;
-    roew: string;
-    epsd: string;
-    grgr: string;
-    opgr: string;
+    ta: number;
+    na: number;
+    epsgr: number;
+    roew: number;
+    epsd: number;
+    grgr: number;
+    opgr: number;
 };
-interface Forcast extends StatementBase {
+interface PerformanceForcast extends StatementBase {
     type: string;
     abstract: string;
-    npasgrUpperLimit: string;
-    npasgrLowerLimit: string;
+    npasgrUpperLimit: number;
+    npasgrLowerLimit: number;
 
 };
 interface QuarterDataBundle {
@@ -76,22 +76,23 @@ interface QuarterDataBundle {
 };
 
 interface DateIntervalDataBundle {
-    report: Report;
-    forcast: Forcast;
+    performanceReport?: PerformanceReport;
+    performanceForcast?: PerformanceForcast;
 };
+type AllBundle = QuarterDataBundle & Required<DateIntervalDataBundle>;
 type StatementType = keyof QuarterDataBundle | keyof DateIntervalDataBundle;
 type Quarter = 1 | 2 | 3 | 4;
 
 type DateFormat = "date" | "quarter";
-const typeSequence: StatementType[] = ["profitability", "operationalCapability", "growthAbility", "solvency", "cashFlow", "report", "forcast"]
+const typeSequence: StatementType[] = ["profitability", "operationalCapability", "growthAbility", "solvency", "cashFlow", "performanceReport", "performanceForcast"]
 const typeMapping = {
-    report: { format: "quarter", title: "季频业绩快报" },
-    forcast: { format: "quarter", title: "季频业绩预告" },
-    profitability: { format: "date", title: "季频盈利能力" },
-    operationalCapability: { format: "date", title: "季频营运能力" },
-    growthAbility: { format: "date", title: "季频成长能力" },
-    solvency: { format: "date", title: "季频偿债能力" },
-    cashFlow: { format: "date", title: "季频现金流量" },
+    performanceReport: { format: "date", title: "季频业绩快报" },
+    performanceForcast: { format: "date", title: "季频业绩预告" },
+    profitability: { format: "quarter", title: "季频盈利能力" },
+    operationalCapability: { format: "quarter", title: "季频营运能力" },
+    growthAbility: { format: "quarter", title: "季频成长能力" },
+    solvency: { format: "quarter", title: "季频偿债能力" },
+    cashFlow: { format: "quarter", title: "季频现金流量" },
     // dupond: { format: "date", title: "季频杜邦指数" }
 } as { [T in StatementType]: { format: DateFormat, title: string } };
 export type {
@@ -99,15 +100,16 @@ export type {
     CashFlow,
     DateIntervalDataBundle,
     // Dupond,
-    Forcast,
+    PerformanceForcast,
     GrowthAbility,
     OperationalCapability,
     Profitability,
     QuarterDataBundle,
-    Report,
+    PerformanceReport,
     StatementBase,
     StatementType,
-    Quarter
+    Quarter,
+    AllBundle
 };
 
 export {

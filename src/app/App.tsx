@@ -14,9 +14,16 @@ const DEBUG_MODE = process.env.NODE_ENV === "development";
 
 client.loadData().then(() => {
     store.dispatch(makeDataStateUpdateAction({ loaded: true, currentStock: "" }));
-    if (store.getState().stockState.tradingTime) client.connectStockListSocket();
+    // if (store.getState().stockState.tradingTime) client.connectStockListSocket();
 });
-
+store.subscribe(() => {
+    const state = store.getState();
+    if (state.viewState.darkModeEnabled) {
+        document.body.style.backgroundColor = "black";
+    } else {
+        document.body.style.backgroundColor = "white";
+    }
+});
 const App: React.FC<{}> = () => {
     return <Grid colums="1" centered>
         <Grid.Column width="15">

@@ -3,8 +3,9 @@ import { BACKEND_BASE_URL, DEBUG_MODE } from "../App";
 import { showErrorModal } from "../dialogs/Dialog";
 import { Config, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockListFetchType, StockTrendList } from "./types";
 import { v4 as uuidv4 } from "uuid";
-import { CashFlow, DateIntervalDataBundle, Forcast, GrowthAbility, OperationalCapability, Profitability, QuarterDataBundle, Report, Solvency } from "./statement-types";
+import { CashFlow, DateIntervalDataBundle, PerformanceForcast, GrowthAbility, OperationalCapability, Profitability, QuarterDataBundle, PerformanceReport, Solvency } from "./statement-types";
 import { makeStockStateUpdateAction, store } from "../state/Manager";
+import _ from "lodash";
 // import _ from "lodash";
 const axiosErrorHandler = (err: any) => {
     let resp = err.response;
@@ -154,7 +155,21 @@ class WindClient {
         this.simpleStockList = await this.getStockList("default");
         this.fullStockList = await this.getStockList("all");
         this.fullStockList.forEach(x => this.stockByID.set(x.id, x));
-        store.dispatch(makeStockStateUpdateAction({ tradingTime: await this.getTradeStatus() }));
+        try {
+            store.dispatch(makeStockStateUpdateAction({
+                tradingTime: await this.getTradeStatus(),
+                errorFetchingTradingTime: false,
+                replaying: false
+            }));
+        } catch (e) {
+            console.log(e);
+            store.dispatch(makeStockStateUpdateAction({
+                tradingTime: false,
+                errorFetchingTradingTime: true,
+                replaying: false
+            }));
+        }
+
     }
     /**
      * Search stocks in the basic info list
@@ -178,26 +193,31 @@ class WindClient {
      * Connect to the stock list update socket.
      * This function will disconnect previous stock list update socket.
      */
-    public connectStockListSocket() {
+    public connectStockListSocket(type: "replay" | "realtime", beginDate?: string, endDate?: string, speed?: number) {
         if (this.stockListSocket) {
             this.stockListSocket.close();
         }
-        this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/realtime/list?token=${this.token!}`);
+        if (type === "realtime") {
+            this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/realtime/list?token=${this.token!}`);
+        } else {
+            this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/playback/list?token=${this.token!}&begin=${beginDate!}&end=${endDate!}&speed=${speed!}`);
+        }
         this.stockListSocket.onopen = () => {
             this.stockListSocket!.send(JSON.stringify(this.simpleStockList!.map(item => item.id)));
+            if (type === "replay") {
+                store.dispatch(makeStockStateUpdateAction({ tradingTime: store.getState().stockState.tradingTime, errorFetchingTradingTime: false, replaying: true }));
+            }
         };
         this.stockListSocket.onmessage = (msg: MessageEvent<string>) => {
             this.stockListUpdateHandlers.forEach(f => f(JSON.parse(msg.data) as StockList));
-            // const data = JSON.parse(msg.data) as WebsocketPacketWrapper<StockList>;
-
-            // if (!data.ok) {
-            //     console.log("Failed to receive stock list update:", data.message);
-            // } else { this.stockListUpdateHandlers.forEach(f => f(data.data)); }
         };
         this.stockListSocket.onclose = ev => {
             if (ev.code === 1000 && ev.reason === "Trade Off") {
-                showErrorModal("股票列表已经停止刷新，这个可能是因为当前超过了交易时间。");
-                store.dispatch(makeStockStateUpdateAction({ tradingTime: false }));
+                showErrorModal("股票列表已经停止刷新，这可能是因为当前超过了交易时间。");
+                store.dispatch(makeStockStateUpdateAction({ tradingTime: store.getState().stockState.tradingTime, errorFetchingTradingTime: false, replaying: false }));
+            } else if (ev.code === 1000 && ev.reason === "Playback Finished") {
+                showErrorModal("回放结束");
+                store.dispatch(makeStockStateUpdateAction({ tradingTime: store.getState().stockState.tradingTime, errorFetchingTradingTime: false, replaying: false }));
             } else if (ev.code !== 1000) {
                 showErrorModal(`WebSocket连接已断开: ${ev.code} - ${ev.reason}`)
             }
@@ -207,12 +227,16 @@ class WindClient {
      * Connect to the single stock update socket.
      * This function will disconnect previous stock list update socket.
      */
-    public connectSingleStockSocket(stock_id: string) {
+    public connectSingleStockSocket(stock_id: string, type: "replay" | "realtime", beginDate?: string, endDate?: string, speed?: number) {
         if (this.singleStockSocket) {
             this.singleStockSocket.close();
         }
 
-        this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/realtime/trend?token=${this.token!}&id=${stock_id}`);
+        if (type === "realtime") {
+            this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/realtime/trend?token=${this.token!}&id=${stock_id}`);
+        } else {
+            this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/playback/trend?token=${this.token!}&id=${stock_id}&begin=${beginDate}&end=${endDate}&speed=${speed}`);
+        }
         console.log(this.singleStockSocket);
         console.log("Single socket to", stock_id, "created");
         this.singleStockSocket.onmessage = (msg: MessageEvent<string>) => {
@@ -407,11 +431,11 @@ class WindClient {
     public async getDateIntervalStockStatement(id: string, beginDate?: string, endDate?: string): Promise<DateIntervalDataBundle> {
         const wrapURL = (s: string) => `/api/statement/${s}`;
         let resp = (await axios.all([
-            "report", "forcast"
-        ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, "begin": beginDate, "end": endDate } })))).map(i => i.data);
+            "report", "forecast"
+        ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, "begin": beginDate, "end": endDate } })))).map(i => i.data) as [PerformanceReport[], PerformanceForcast[]];
         return {
-            report: resp[0] as Report,
-            forcast: resp[1] as Forcast
+            performanceReport: _.last(resp[0]),
+            performanceForcast: _.last(resp[1])
         };
     }
     public async getTradeStatus(date?: string): Promise<boolean> {

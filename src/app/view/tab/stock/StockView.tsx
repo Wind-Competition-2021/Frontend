@@ -1,5 +1,5 @@
-import { useDocumentTitle } from "../../../common/Util";
-import { Divider, Input, Grid, Dimmer, Placeholder, Loader, Checkbox } from "semantic-ui-react";
+import { toDateString, useDocumentTitle } from "../../../common/Util";
+import { Divider, Input, Grid, Dimmer, Placeholder, Loader,  Form, Button } from "semantic-ui-react";
 import { client } from "../../../client/WindClient";
 import { StockBasicInfo, StockList, StockListItem, StockTrendList } from "../../../client/types";
 import { Layout } from "./StockViewLayout";
@@ -15,6 +15,7 @@ import { WrappedStockCandleChart } from "./StockCandleChart";
 import SingleStockTrendChart from "./SingleStockTrendChart";
 import { DateTime } from "luxon";
 import { useDarkMode } from "../../../state/Util";
+import DayPickerInput from "react-day-picker/DayPickerInput";
 const stockListComparor = (x: StockListItem, y: StockListItem) => {
     if (x.pinned === y.pinned) return (y.closing - y.preClosing) / y.preClosing > (x.closing - x.preClosing) / x.preClosing ? 1 : -1;
     return x.pinned > y.pinned ? -1 : 1;
@@ -39,9 +40,41 @@ function filterStockTrendList(input: StockTrendList): StockTrendList {
     }
     return result;
 }
+interface ReplayConfig {
+    start: Date;
+    end: Date;
+    speed: number;
+}
+
+const ReplayConfigForm: React.FC<{ data: ReplayConfig; callback: (d: ReplayConfig) => void }> = ({ callback, data }) => {
+    const [config, setConfig] = useState(data);
+    return <Form>
+        <Form.Group>
+            <Form.Field>
+                <label>开始日期</label>
+                <DayPickerInput dayPickerProps={{ className: "most-top" }} value={config.start} onDayChange={d => setConfig({ ...config, start: d })}></DayPickerInput>
+            </Form.Field>
+            <Form.Field >
+                <label>结束日期</label>
+                <DayPickerInput dayPickerProps={{ className: "most-top" }} value={config.end} onDayChange={d => setConfig({ ...config, end: d })}></DayPickerInput>
+            </Form.Field>
+            <Form.Field >
+                <label>回放速度</label>
+                <Input type="number" value={config.speed} onChange={e => setConfig({ ...config, speed: parseInt(e.target.value) })}></Input>
+            </Form.Field>
+            <Form.Field >
+                <label>操作</label>
+                <Form.Button color="green" size="tiny" onClick={() => callback(config)}>
+                    开始重放
+                </Form.Button>
+            </Form.Field>
+        </Form.Group>
+    </Form>;
+};
 
 const StockView: React.FC<{}> = () => {
     useDocumentTitle("实时报价");
+    const today = DateTime.now();
     /**
      * 证券列表数据
      */
@@ -64,36 +97,64 @@ const StockView: React.FC<{}> = () => {
         dispatch(makeCurrentStockAction(text));
     }, [dispatch]);
     const inTradeTime = useSelector((s: StateType) => s.stockState.tradingTime);
-    const [darkMode, setDarkMode] = useDarkMode();
-
+    const [darkMode] = useDarkMode();
+    /**
+     * 当前是否正在回放
+     */
+    const [replaying, setReplaying] = useState(false);
+    /**
+     * 当前是否不该显示不工作dimmer
+     */
+    const nowShouldWork = inTradeTime || replaying;
+    /**
+     * 当前是否可以进行回放
+     */
+    // const nowCouldReplay = !inTradeTime;
+    const [nowCouldReplay, setNowCouldReplay] = useState(false);
+    /**
+     * 回放设置
+     */
+    const [replayConfig, setReplayConfig] = useState<ReplayConfig>({
+        start: today.minus({ day: 1 }).toJSDate(),
+        end: today.minus({ day: 1 }).toJSDate(),
+        speed: 10
+    });
     /**
      * 页面加载完成，添加一个总的接受股票列表更新的监听器
      */
     useEffect(() => {
-        if (inTradeTime) {
-            console.log("Connecting stock list socket..")
+        if (nowShouldWork) {
+            console.log("Connecting stock list socket..");
+            setStockListSocketLoaded(false);
+            if (replaying)
+                client.connectStockListSocket("replay", toDateString(replayConfig.start), toDateString(replayConfig.end), replayConfig.speed);
+            else client.connectStockListSocket("realtime");
+
             const token = client.addStockListUpdateListener((val) => {
                 val.sort(stockListComparor);
                 setStockList(val);
                 setStockListSocketLoaded(true);
             });
+            setCurrentStock(null);
             return () => {
                 client.removeStockListUpdateListener(token);
+                client.disconnectStockListSocket();
             };
         }
-    }, [inTradeTime]);
+    }, [nowShouldWork, replayConfig, replaying]);
     /**
      * 当前股票更新时，更改单只股票用的Socket
      */
     useEffect(() => {
-        if (currentStock != null && inTradeTime) {
+        if (currentStock != null && nowShouldWork) {
             setStockTrendList([]);
             setSingleListLoading(true);
-            client.connectSingleStockSocket(currentStock);
+            if (replaying) {
+                client.connectSingleStockSocket(currentStock, "replay", toDateString(replayConfig.start), toDateString(replayConfig.end), replayConfig.speed);
+            } else { client.connectSingleStockSocket(currentStock, "realtime"); }
             console.log("Connecting single socket:", currentStock);
             const token = client.addSingleStockTrendUpdateListener(val => {
                 console.log("single update", val);
-                // setStockTrendList(val);
                 setStockTrendList(s => _.takeRight(filterStockTrendList([...(s || []), ...val]), 90));
                 setSingleListLoading(false);
             });
@@ -103,8 +164,7 @@ const StockView: React.FC<{}> = () => {
                 client.disconnectSingleStockSocket();
             };
         }
-        // eslint-disable-next-line
-    }, [currentStock, inTradeTime]);
+    }, [currentStock, nowShouldWork, replayConfig, replaying]);
 
     /**
      * 执行股票搜索(点击按钮或者按下回车)
@@ -115,95 +175,111 @@ const StockView: React.FC<{}> = () => {
         setShowingSearchModal(true);
     };
     return <>
-        <div className={darkMode ? "dark-mode" : ""}>
-            <Dimmer active={!inTradeTime}>
-                <div>当前不在交易时间，本页面已停用。请前往行情分析页面。</div>
+        <div
+            style={darkMode ? {
+                backgroundColor: "black"
+            } : {}}
+
+        >
+            <Dimmer active={!inTradeTime && !nowCouldReplay}>
+                <div>当前不在交易时间，本页面已停用。您可以 <Button size="tiny" color="black" onClick={() => setNowCouldReplay(true)}>重放</Button></div>
             </Dimmer>
-            <Dimmer active={!stockListSocketLoaded && inTradeTime}>
+            <Dimmer active={!stockListSocketLoaded && nowShouldWork}>
                 <Loader>建立连接中...</Loader>
             </Dimmer>
 
-            <Grid columns="2">
-                <Grid.Column width="8">
-                    <Input action={{
-                        labelPosition: "right",
-                        icon: "search",
-                        content: "股票搜索",
-                        onClick: doStockSearch
-                    }} input={<input value={searchText} onChange={e => {
-                        setSearchText(e.target.value)
-                    }} placeholder="按回车键发起搜索" onKeyDown={e => {
-                        if (e.code === "Enter") {
-                            doStockSearch();
-                        }
-                    }}>
-                    </input>}></Input>
-                </Grid.Column>
-                <Grid.Column >
-                    <Checkbox toggle checked={darkMode} onChange={(_, d) => setDarkMode(d.checked!)} label="暗色模式"></Checkbox>
-                </Grid.Column>
-            </Grid>
+            <div >
+                <Grid columns="2" >
+                    {(!(nowCouldReplay && !replaying)) && <Grid.Column width="6">
+                        <Input className={darkMode ? "dark-mode" : ""} action={{
+                            labelPosition: "right",
+                            icon: "search",
+                            content: "股票搜索",
+                            onClick: doStockSearch
+                        }} input={<input value={searchText} onChange={e => {
+                            setSearchText(e.target.value)
+                        }} placeholder="按回车键发起搜索" onKeyDown={e => {
+                            if (e.code === "Enter") {
+                                doStockSearch();
+                            }
+                        }}>
+                        </input>}></Input>
+                    </Grid.Column>}
+                    <Grid.Column width="10">
+                        {nowCouldReplay && <ReplayConfigForm data={replayConfig} callback={cfg => { setReplayConfig(cfg); setReplaying(true); }}></ReplayConfigForm>}
+                    </Grid.Column>
+                    {/* <Grid.Column >
+                        <Checkbox className={darkMode ? "dark-mode" : ""} toggle checked={darkMode} onChange={(_, d) => setDarkMode(d.checked!)} label="暗色模式"></Checkbox>
+                    </Grid.Column> */}
+                </Grid>
+            </div>
             <Divider></Divider>
-            <Layout
-                name="default"
-                candleChart={
-                    (() => {
-                        if (inTradeTime) {
-                            return currentStock ? <WrappedStockCandleChart stock={currentStock} key={currentStock}></WrappedStockCandleChart> : <div></div>;
-                        } else {
-                            return <Placeholder>
-                                {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
-                            </Placeholder>;
-                        }
-                    })()
-                }
-                singleTrend={
-                    (() => {
-                        if (singleListLoading && inTradeTime) {
-                            return <div>
-                                <div style={{ height: "300px" }}></div>
-                                <Dimmer active>
-                                    <Loader>加载中</Loader>
-                                </Dimmer>
-                            </div>
-                        }
-                        if (inTradeTime) {
-                            return stockTrendList ? <SingleStockTrendChart
-                                data={stockTrendList}
-                            ></SingleStockTrendChart> : <div></div>;
-                        } else {
-                            return <Placeholder>
-                                {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
-                            </Placeholder>;
-                        }
-                    })()
-                }
-                stockList={
-                    (() => {
-                        if (inTradeTime) {
-                            return <StockListChart
-                                currentStock={currentStock!}
-                                setCurrentStock={(x) => {
-                                    setCurrentStock(x);
-                                    setSearchText(x);
-                                    updateGlobalCurrentStock(x);
-                                }}
-                                stockList={stockList!}
-                                refreshPinnedStocks={() => {
-                                    const pinned = new Set(client.getLocalConfig()?.pinnedStocks);
-                                    const data = stockList!.map(i => ({ ...i, pinned: pinned.has(i.id) }));
-                                    data.sort(stockListComparor);
-                                    setStockList(data);
-                                }}
-                            ></StockListChart>;
-                        } else {
-                            return <Placeholder fluid>
-                                {_.times(20, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
-                            </Placeholder>;
-                        }
-                    })()
-                }
-            ></Layout>
+            <div>
+                <Grid columns="1">
+                    <Grid.Column>
+                        {(!(nowCouldReplay && !replaying)) && <Layout
+                            name="default"
+                            candleChart={
+                                (() => {
+                                    if (nowShouldWork) {
+                                        return currentStock ? <WrappedStockCandleChart stock={currentStock} key={currentStock}></WrappedStockCandleChart> : <div></div>;
+                                    } else {
+                                        return <Placeholder>
+                                            {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
+                                        </Placeholder>;
+                                    }
+                                })()
+                            }
+                            singleTrend={
+                                (() => {
+                                    if (singleListLoading && nowShouldWork) {
+                                        return <div>
+                                            <div style={{ height: "300px" }}></div>
+                                            <Dimmer active>
+                                                <Loader>加载中</Loader>
+                                            </Dimmer>
+                                        </div>
+                                    }
+                                    if (nowShouldWork) {
+                                        return stockTrendList ? <SingleStockTrendChart
+                                            data={stockTrendList}
+                                        ></SingleStockTrendChart> : <div></div>;
+                                    } else {
+                                        return <Placeholder>
+                                            {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
+                                        </Placeholder>;
+                                    }
+                                })()
+                            }
+                            stockList={
+                                (() => {
+                                    if (nowShouldWork) {
+                                        return <StockListChart
+                                            currentStock={currentStock!}
+                                            setCurrentStock={(x) => {
+                                                setCurrentStock(x);
+                                                setSearchText(x);
+                                                updateGlobalCurrentStock(x);
+                                            }}
+                                            stockList={stockList!}
+                                            refreshPinnedStocks={() => {
+                                                const pinned = new Set(client.getLocalConfig()?.pinnedStocks);
+                                                const data = stockList!.map(i => ({ ...i, pinned: pinned.has(i.id) }));
+                                                data.sort(stockListComparor);
+                                                setStockList(data);
+                                            }}
+                                        ></StockListChart>;
+                                    } else {
+                                        return <Placeholder fluid>
+                                            {_.times(20, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
+                                        </Placeholder>;
+                                    }
+                                })()
+                            }
+                        ></Layout>}
+                    </Grid.Column>
+                </Grid>
+            </div>
         </div>
         <StockViewSearchModal
             matchedStocks={matchedStocks}
