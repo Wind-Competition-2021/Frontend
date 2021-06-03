@@ -17,6 +17,7 @@ interface Config {
         trend: number;//单只股票数据刷新间隔
         list: number;//股票列表刷新间隔
     }
+    playbackSpeed: number;
 };
 /**
  * Used to draw a trend line (data from websocket)
@@ -54,11 +55,25 @@ interface StockBasicInfo {
     name: string;
 };
 type StockBasicInfoList = StockBasicInfo[];
+type ManyThingsInStockInfo = Record<
+    "registeredCapital" |
+    "legalRepresentative" |
+    "generalManager" |
+    "secretary" |
+    "province" |
+    "city" |
+    "office" |
+    "email" |
+    "website" |
+    "businessScope" |
+    "mainBusiness" |
+    "introduction"
+    , string> & { employeeCount: number; };
 /**
  * 股票详细信息
  */
-interface StockInfo extends StockBasicInfo {
-    type: "stock" | "index";
+interface StockInfo extends StockBasicInfo, ManyThingsInStockInfo {
+    type: "stock" | "index" | "other";
     industry: string;
     classification: string;
     listedDate: string;

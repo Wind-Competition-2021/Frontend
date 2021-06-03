@@ -5,17 +5,17 @@ import React, { useState } from "react";
 import { useEffect } from "react";
 import DayPickerInput from "react-day-picker/DayPickerInput";
 import { Button, Dimmer, Divider, Form, Grid, Input, Loader, Menu } from "semantic-ui-react";
-import { DateIntervalDataBundle, Quarter, QuarterDataBundle, StatementType, typeMapping, typeSequence } from "../../../../client/statement-types";
+import { DateFormat, dateFormatMapping, dateFormatSequence, DateIntervalDataBundle, Quarter, QuarterDataBundle } from "../../../../client/statement-types";
 import { client } from "../../../../client/WindClient";
 import { checkValidDateRange, isFutureDate, toDateString, useDocumentTitle } from "../../../../common/Util";
 import { showErrorModal } from "../../../../dialogs/Dialog";
 import AnalysisStockSearch from "../AnalysisStockSearch";
-import StatementTableView from "./StatementTableView";
+import SingleStatementTable from "./StatementTableView";
 
 
 const StatementAnalysisView: React.FC<{
 }> = () => {
-    useDocumentTitle("分析");
+    useDocumentTitle("财务报表分析");
     const today = DateTime.now();
     const prevQuarter = today.minus({ months: 3 });
     /**
@@ -40,7 +40,7 @@ const StatementAnalysisView: React.FC<{
      */
     const [quarter, setQuarter] = useState<Quarter>(prevQuarter.quarter as Quarter);
     const [fetching, setFetching] = useState(false);
-    const [currentTab, setCurrentTab] = useState<StatementType>("profitability");
+    const [currentTab, setCurrentTab] = useState<DateFormat>("quarter");
     const [dateBundle, setDateBundle] = useState<DateIntervalDataBundle | null>(null);
     const [quarterBundle, setQuarterBundle] = useState<QuarterDataBundle | null>(null);
     const [dataLoaded, setDataLoaded] = useState(false);
@@ -87,12 +87,12 @@ const StatementAnalysisView: React.FC<{
                 <Grid columns="2">
                     <Grid.Column width="4">
                         <Menu fluid vertical tabular>
-                            {typeSequence.map((item, i) => <Menu.Item
+                            {dateFormatSequence.map((item, i) => <Menu.Item
                                 key={i}
 
                                 active={item === currentTab}
                                 onClick={() => setCurrentTab(item)}
-                            >{typeMapping[item].title}</Menu.Item>)}
+                            >{dateFormatMapping[item]}</Menu.Item>)}
                         </Menu>
                     </Grid.Column>
                     <Grid.Column stretched width="12">
@@ -100,7 +100,7 @@ const StatementAnalysisView: React.FC<{
                             <Grid.Column>
                                 <Form>
                                     <Form.Group>
-                                        {typeMapping[currentTab].format === "date" ? <>
+                                        {(currentTab === "date") ? <>
                                             <Form.Field>
                                                 <label>日期开始</label>
                                                 <DayPickerInput
@@ -163,11 +163,12 @@ const StatementAnalysisView: React.FC<{
                                 <Divider></Divider>
                             </Grid.Column>
                             <Grid.Column>
-                                {dataLoaded && <StatementTableView
+                                {dataLoaded && <SingleStatementTable
                                     dateBundle={dateBundle!}
                                     quarterBundle={quarterBundle!}
-                                    type={currentTab}
-                                ></StatementTableView>}
+                                    // type={currentTab}
+                                    dateFormat={currentTab}
+                                ></SingleStatementTable>}
                             </Grid.Column>
                         </Grid>
                     </Grid.Column>

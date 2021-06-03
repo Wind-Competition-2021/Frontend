@@ -84,6 +84,11 @@ type StatementType = keyof QuarterDataBundle | keyof DateIntervalDataBundle;
 type Quarter = 1 | 2 | 3 | 4;
 
 type DateFormat = "date" | "quarter";
+const dateFormatMapping = {
+    date: "快报预报",
+    quarter: "季频数据"
+} as Record<DateFormat, string>;
+const dateFormatSequence: DateFormat[] = ["quarter", "date"];
 const typeSequence: StatementType[] = ["profitability", "operationalCapability", "growthAbility", "solvency", "cashFlow", "performanceReport", "performanceForcast"]
 const typeMapping = {
     performanceReport: { format: "date", title: "季频业绩快报" },
@@ -109,9 +114,11 @@ export type {
     StatementBase,
     StatementType,
     Quarter,
-    AllBundle
+    AllBundle,
+    DateFormat
 };
 
 export {
-    typeMapping, typeSequence
+    typeMapping, typeSequence, 
+    dateFormatMapping, dateFormatSequence
 }

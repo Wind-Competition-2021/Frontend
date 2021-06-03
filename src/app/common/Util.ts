@@ -3,13 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 import { InputOnChangeData } from "semantic-ui-react";
 import { DateTime } from "luxon";
 const wrapDocumentTitle = (title: string) => {
-    return `${title} - 万得竞赛`;
+    return `${title} - 葱太富了`;
 };
 const useDocumentTitle: (title: string) => void = (title: string) => {
     useEffect(() => {
         document.title = wrapDocumentTitle(title);
         return () => {
-            document.title = "万得竞赛";
+            document.title = "葱太富了";
         };
     }, [title]);
 };
@@ -44,9 +44,13 @@ const useInputValue: (text?: string) => { value: string; onChange: onChangeType 
     return { value, onChange };
 };
 
-const toDateString = (date: Date) => {
+export function toDateString(date: Date) {
     return DateTime.fromJSDate(date).toFormat("yyyy-MM-dd");
 };
+export function toDateStringLuxon(date: DateTime) {
+    return date.toFormat("yyyy-MM-dd");
+};
+
 
 const unwrapPercent = (valx: number) => {
     // let val = _.padStart(valx.toString(), 6, "0");
@@ -94,7 +98,9 @@ const isFutureDate = (d: Date) => {
     if (checkValidDateRange(now.toJSDate(), d)) return true;
     return false;
 };
+
+
 // (window as (typeof window) & {f:any}).f=convertNumbers;
-export { useDocumentTitle, convertNumbers, useInputValue, toDateString, unwrapPercent, unwrapNumber, isFutureDate, checkValidDateRange };
+export { useDocumentTitle, convertNumbers, useInputValue, unwrapPercent, unwrapNumber, isFutureDate, checkValidDateRange };
 
 export type { onChangeType }

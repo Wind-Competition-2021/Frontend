@@ -25,7 +25,7 @@ const QuoteAnalysisStockChart: React.FC<{
                 <Header as="h4">
                     周数据
                 </Header>
-                <div style={{ overflowY: "scroll", height: "300px" }}>
+                <div style={{ overflowY: "scroll", height: "400px" }}>
                     <Table>
                         <Table.Header>
                             <Table.Row>

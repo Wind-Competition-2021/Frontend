@@ -2,14 +2,15 @@ import React, { useEffect, useState } from "react";
 import { Config } from "../../client/types";
 import { client } from "../../client/WindClient";
 import { Button, Form, Divider, Grid, Table, Header } from "semantic-ui-react";
-import { showSuccessModal } from "../../dialogs/Dialog";
+// import { showSuccessModal } from "../../dialogs/Dialog";
 import { useDocumentTitle } from "../../common/Util";
-import { useDarkMode } from "../../state/Util";
+import { showSuccessPopup } from "../../dialogs/Util";
+// import { useDarkMode } from "../../state/Util";
 const ConfigView: React.FC<{}> = () => {
     const [loaded, setLoaded] = useState(false);
     const [config, setConfig] = useState<Config | null>(null);
     const [sending, setSending] = useState(false);
-    const [darkMode, setDarkMode] = useDarkMode();
+    // const [darkMode, setDarkMode] = useDarkMode();
     useDocumentTitle("设置");
     useEffect(() => {
         if (!loaded) {
@@ -22,11 +23,12 @@ const ConfigView: React.FC<{}> = () => {
         await client.updateRemoteConfig(config!);
         client.setLocalConfig(config!);
         setSending(false);
-        showSuccessModal("操作完成");
+        // showSuccessModal("操作完成");
+        showSuccessPopup("设置更新已同步至服务器");
     };
     return <div>
         {loaded && config && <>
-
+            {/* <Message floating> qwq</Message> */}
             <Grid columns="2">
                 <Grid.Column width="4">
                     <Form>
@@ -55,7 +57,18 @@ const ConfigView: React.FC<{}> = () => {
                         >
                         </input>} >
                         </Form.Input>
-                        <Form.Checkbox toggle checked={darkMode} onChange={(_, d) => setDarkMode(d.checked!)} label="暗色模式"></Form.Checkbox>
+                        <Form.Input label="回放速度" input={<input
+                            type="number"
+                            value={config!.playbackSpeed}
+                            onChange={e => setConfig({
+                                ...config!,
+                                playbackSpeed: parseInt(e.target.value)
+                            })}
+                        >
+                        </input>} >
+                        </Form.Input>
+
+                        {/* <Form.Checkbox toggle checked={darkMode} onChange={(_, d) => setDarkMode(d.checked!)} label="暗色模式"></Form.Checkbox> */}
                     </Form>
                 </Grid.Column>
                 <Grid.Column width="12">

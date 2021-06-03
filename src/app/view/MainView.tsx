@@ -5,6 +5,7 @@ import QuoteAnalysisView from "./tab/analysis/quote/QuoteAnalysisView";
 import StockView from "./tab/stock/StockView";
 import ConfigView from "./tab/ConfigView";
 import StatementAnalysisView from "./tab/analysis/statement/StatementAnalysisView";
+import "./LinkButton.css";
 // import StatementAnalysisView from "./tab/analysis/statement/StatementAnalysisView";
 
 

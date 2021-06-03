@@ -1,6 +1,21 @@
 import { createStore, Action } from "redux";
+import { composeWithDevTools } from "redux-devtools-extension";
 // import { UserInfoType } from "../service/User";
-
+/*
+{
+type: 'STOCKSTATE_UPDATE',
+modify:(state) => {
+      let result = {
+        ...state,
+        stockState: {
+          ...state.stockState,
+          tradingTime:false
+        },
+      };
+      return result;
+    }
+}
+*/
 const defaultState = {
 
   viewState: {
@@ -74,13 +89,14 @@ export function makeCurrentStockAction(id: string) {
 }
 
 const myReducer = (state = defaultState, action: SimpleAction) => {
-  if (!action.type.startsWith("@@redux")) {
-    return action.modify(state);
+  // console.log(action);
+  if (!action.type.startsWith("@@")) {
+    return action?.modify(state);
   } else {
     return state;
   }
 };
-
-const store = createStore(myReducer);
+// const f = window as (typeof window &{__REDUX_DEVTOOLS_EXTENSION__:()=>void});
+const store = createStore(myReducer, composeWithDevTools());
 
 export { store };

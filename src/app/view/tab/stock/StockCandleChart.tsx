@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ExtraCandleChartData, GeneralCandleChartData } from "../../../client/types";
-import { unwrapNumber, unwrapPercent } from "../../../common/Util";
+import { toDateStringLuxon, unwrapNumber, unwrapPercent } from "../../../common/Util";
 import _ from "lodash";
 import { Dimmer, Loader } from "semantic-ui-react";
 
@@ -24,17 +24,25 @@ const myUnwrapNumber = (val: number, multi10000: boolean = false) => {
 
 const WrappedStockCandleChart: React.FC<{
     stock: string;
+    beginDate?: Date;
+    endDate?: Date;
 
-}> = React.memo(({ stock }) => {
+}> = React.memo(({ stock, beginDate, endDate }) => {
     const [loaded, setLoaded] = useState(false);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<GeneralCandleChartData | null>(null);
+    const today = DateTime.now();
+    let begin = beginDate ? DateTime.fromJSDate(beginDate) : today.minus({ day: 30 });
+    const end = endDate ? DateTime.fromJSDate(endDate) : today;
+    if (end.diff(begin, "days").days < 30) {
+        begin = end.minus({ day: 30 });
+    }
     useEffect(() => {
         if (!loaded) {
             (async () => {
                 setLoading(true);
                 try {
-                    const resp = await client.getStockDayHistory(stock);
+                    const resp = await client.getStockDayHistory(stock, toDateStringLuxon(begin), toDateStringLuxon(end));
                     setData(resp.map(item => ({
                         ...item, label: DateTime.fromISO(item.date).toFormat("MM/dd")
                     })))
@@ -49,7 +57,7 @@ const WrappedStockCandleChart: React.FC<{
 
             })();
         }
-    }, [loaded, stock]);
+    }, [loaded, stock, begin, end]);
     return <div>
         {(!loaded) ? <div className="my-charts">
             <Dimmer active={loading}>

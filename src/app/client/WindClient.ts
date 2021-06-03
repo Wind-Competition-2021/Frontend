@@ -1,6 +1,6 @@
 import axios from "axios";
-import { BACKEND_BASE_URL, DEBUG_MODE } from "../App";
-import { showErrorModal } from "../dialogs/Dialog";
+import { BACKEND_BASE_URL } from "../App";
+import { showErrorModal, showSuccessModal } from "../dialogs/Dialog";
 import { Config, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockListFetchType, StockTrendList } from "./types";
 import { v4 as uuidv4 } from "uuid";
 import { CashFlow, DateIntervalDataBundle, PerformanceForcast, GrowthAbility, OperationalCapability, Profitability, QuarterDataBundle, PerformanceReport, Solvency } from "./statement-types";
@@ -12,10 +12,7 @@ const axiosErrorHandler = (err: any) => {
     console.log(resp);
     if (resp) {
         const data = resp.data;
-        if (DEBUG_MODE) {
-            showErrorModal(JSON.stringify(data), resp.status + " " + resp.statusText);
-        }
-        else { showErrorModal(data.message, resp.status + " " + resp.statusText); }
+        showErrorModal(JSON.stringify(data), resp.status + " " + resp.statusText);
     }
     else
         showErrorModal(String(err), "Error!");
@@ -193,14 +190,14 @@ class WindClient {
      * Connect to the stock list update socket.
      * This function will disconnect previous stock list update socket.
      */
-    public connectStockListSocket(type: "replay" | "realtime", beginDate?: string, endDate?: string, speed?: number) {
+    public connectStockListSocket(type: "replay" | "realtime", beginDate?: string, endDate?: string) {
         if (this.stockListSocket) {
             this.stockListSocket.close();
         }
         if (type === "realtime") {
             this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/realtime/list?token=${this.token!}`);
         } else {
-            this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/playback/list?token=${this.token!}&begin=${beginDate!}&end=${endDate!}&speed=${speed!}`);
+            this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/playback/list?token=${this.token!}&begin=${beginDate!}&end=${endDate!}`);
         }
         this.stockListSocket.onopen = () => {
             this.stockListSocket!.send(JSON.stringify(this.simpleStockList!.map(item => item.id)));
@@ -216,7 +213,7 @@ class WindClient {
                 showErrorModal("股票列表已经停止刷新，这可能是因为当前超过了交易时间。");
                 store.dispatch(makeStockStateUpdateAction({ tradingTime: store.getState().stockState.tradingTime, errorFetchingTradingTime: false, replaying: false }));
             } else if (ev.code === 1000 && ev.reason === "Playback Finished") {
-                showErrorModal("回放结束");
+                showSuccessModal("回放结束");
                 store.dispatch(makeStockStateUpdateAction({ tradingTime: store.getState().stockState.tradingTime, errorFetchingTradingTime: false, replaying: false }));
             } else if (ev.code !== 1000) {
                 showErrorModal(`WebSocket连接已断开: ${ev.code} - ${ev.reason}`)
@@ -227,7 +224,7 @@ class WindClient {
      * Connect to the single stock update socket.
      * This function will disconnect previous stock list update socket.
      */
-    public connectSingleStockSocket(stock_id: string, type: "replay" | "realtime", beginDate?: string, endDate?: string, speed?: number) {
+    public connectSingleStockSocket(stock_id: string, type: "replay" | "realtime", beginDate?: string, endDate?: string) {
         if (this.singleStockSocket) {
             this.singleStockSocket.close();
         }
@@ -235,7 +232,7 @@ class WindClient {
         if (type === "realtime") {
             this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/realtime/trend?token=${this.token!}&id=${stock_id}`);
         } else {
-            this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/playback/trend?token=${this.token!}&id=${stock_id}&begin=${beginDate}&end=${endDate}&speed=${speed}`);
+            this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/playback/trend?token=${this.token!}&id=${stock_id}&begin=${beginDate}&end=${endDate}`);
         }
         console.log(this.singleStockSocket);
         console.log("Single socket to", stock_id, "created");

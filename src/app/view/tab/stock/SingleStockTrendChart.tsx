@@ -23,7 +23,7 @@ const SingleStockTrendChart: React.FC<{
     const minPrice = _.min(priceData.map(i => i.value))!;
     const halfLen = (maxPrice - minPrice) / 2;
     const combinedVolumeData = _.zip(_.tail(data), _.initial(data.map(i => ({ closing: i.closing, volume: i.volume })))).map(([item, pre]) => {
-        const diff = item!.volume - pre!.volume;
+        const diff = item!.volume;
         const priceDiff = item!.closing - pre!.closing;
         if (priceDiff === 0) {
             return ({

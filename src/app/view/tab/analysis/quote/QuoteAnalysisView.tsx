@@ -22,7 +22,7 @@ interface CandleTypeWrapper<Day, Week, Month> {
 }
 const QuoteAnalysisView: React.FC<{
 }> = () => {
-    useDocumentTitle("分析");
+    useDocumentTitle("行情分析");
     const today = DateTime.now();
     /**
      * 当前要分析的股票
