@@ -49,7 +49,7 @@ const StatementTableView: React.FC<{
                 <AnalysisInformationItem title="发布日期" colSpan={2}>
                     {generalData.publishDate ? toDateString(DateTime.fromISO(generalData.publishDate).toJSDate()) : "数据不存在"}
                 </AnalysisInformationItem>
-                <AnalysisInformationItem title="发布日期" colSpan={2}>
+                <AnalysisInformationItem title="截止日期" colSpan={2}>
                     {generalData.statDeadline ? toDateString(DateTime.fromISO(generalData.statDeadline).toJSDate()) : "数据不存在"}
                 </AnalysisInformationItem>
             </Table.Row>
