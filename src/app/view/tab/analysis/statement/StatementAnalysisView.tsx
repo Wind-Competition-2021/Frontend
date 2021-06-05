@@ -106,14 +106,14 @@ const StatementAnalysisView: React.FC<{
                     <Grid.Column>
                         {currentStock && <Form>
                             <Form.Group>
-                                <><Form.Field>
+                                <><Form.Field inline>
                                     <label>年份</label>
                                     <Input type="number"
                                         value={year}
                                         onChange={(_, d) => setYear(parseInt(d.value))}
                                     ></Input>
-                                </Form.Field>
-                                    <Form.Field>
+                                    </Form.Field>
+                                    <Form.Field inline>
                                         <label>季度</label>
                                         <Button.Group>
                                             {([1, 2, 3, 4,] as Quarter[]).map(q => <Button
@@ -130,8 +130,8 @@ const StatementAnalysisView: React.FC<{
                                         </Button.Group>
                                     </Form.Field></>
 
-                                <Form.Field>
-                                    <label>操作</label>
+                                <Form.Field inline>
+                                    {/* <label>操作</label> */}
                                     <Form.Button color="green" onClick={fetchData}>
                                         查询
                                     </Form.Button>

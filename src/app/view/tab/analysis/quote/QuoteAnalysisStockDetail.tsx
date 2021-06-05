@@ -30,7 +30,7 @@ const QuoteAnalysisStockDetail: React.FC<{ stockInfo: StockInfo }> = ({ stockInf
             <Table.Row>
                 <AnalysisInformationItem title="注册资本" colSpan={1}>{stockInfo.registeredCapital}</AnalysisInformationItem>
                 <AnalysisInformationItem title="上市" colSpan={1}>{DateTime.fromISO(stockInfo.listedDate).toFormat("yyyy-MM-dd")}</AnalysisInformationItem>
-                <AnalysisInformationItem title="退市" colSpan={1}>{stockInfo.delistedDate && DateTime.fromISO(stockInfo.delistedDate).toFormat("yyyy-MM-dd")}</AnalysisInformationItem>
+                <AnalysisInformationItem title="退市" colSpan={1}>{stockInfo.delistedDate ? DateTime.fromISO(stockInfo.delistedDate).toFormat("yyyy-MM-dd") : "数据不存在"}</AnalysisInformationItem>
 
                 <AnalysisInformationItem title="省" colSpan={1}>{stockInfo.province}</AnalysisInformationItem>
                 <AnalysisInformationItem title="市" colSpan={1}>{stockInfo.city}</AnalysisInformationItem>

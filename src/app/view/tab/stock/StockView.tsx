@@ -109,6 +109,18 @@ const StockView: React.FC<{}> = () => {
             else client.connectStockListSocket("realtime");
 
             const token = client.addStockListUpdateListener((val) => {
+                const updateStockList = (list: StockList) => {
+                    setStockList(l => {
+                        if (l === null) return list;
+                        const map = new Map<string, StockList[0]>();
+                        l.forEach(x => map.set(x.id, x));
+                        list.forEach(x => {
+                            x.lowest = Math.min(x.lowest, map.get(x.id)!.lowest);
+                            x.highest = Math.max(x.highest, map.get(x.id)!.highest);
+                        })
+                        return list;
+                    });
+                };
                 if (replaying) {
                     const replayVal = (val as ReplayWrapper<StockList>).quotes;
                     setReplayingTime(c => ({
@@ -116,11 +128,13 @@ const StockView: React.FC<{}> = () => {
                         stockList: DateTime.fromISO((val as ReplayWrapper<StockList>).time)
                     }));
                     replayVal.sort(stockListComparor);
-                    setStockList(replayVal);
+                    // setStockList(replayVal);
+                    updateStockList(replayVal);
                 } else {
                     const realtimeVal = val as StockList;
                     realtimeVal.sort(stockListComparor);
-                    setStockList(realtimeVal);
+                    // setStockList(realtimeVal);
+                    updateStockList(realtimeVal);
                 }
 
                 setStockListSocketLoaded(true);

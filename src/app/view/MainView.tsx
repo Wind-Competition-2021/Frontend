@@ -6,6 +6,7 @@ import StockView from "./tab/stock/StockView";
 import ConfigView from "./tab/ConfigView";
 import StatementAnalysisView from "./tab/analysis/statement/StatementAnalysisView";
 import "./LinkButton.css";
+import "core-js/stable";
 // import StatementAnalysisView from "./tab/analysis/statement/StatementAnalysisView";
 
 
