@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
 import { Grid, Form, Dimmer, Loader, Menu, Segment } from "semantic-ui-react";
-import { RealTimeDataByDay, RealTimeDataByWeek, RehabilitationType, StockInfo } from "../../../../client/types";
+import { RealTimeDataByDay, RealTimeDataByWeek, RehabilitationType } from "../../../../client/types";
 import { client } from "../../../../client/WindClient";
 import { checkValidDateRange, isFutureDate, toDateString, useDocumentTitle } from "../../../../common/Util";
 import AnalysisStockSearch from "../AnalysisStockSearch";
 import { DateTime } from "luxon";
 import 'react-day-picker/lib/style.css';
 import DayPickerInput from "react-day-picker/DayPickerInput"
-import QuoteAnalysisStockDetail from "./QuoteAnalysisStockDetail";
 // import QuoteAnalysisStockChart from "./QuoteAnalysisStockChart";
 import { showErrorModal } from "../../../../dialogs/Dialog";
 import { StockCandleChart } from "../../stock/StockCandleChart";
@@ -33,7 +32,7 @@ const QuoteAnalysisView: React.FC<{
      */
     const [rehabilitation, setRehabilitation] = useState<RehabilitationType>("none");
     const [loading, setLoading] = useState(false);
-    const [stockInfo, setStockInfo] = useState<StockInfo | null>(null);
+    // const [stockInfo, setStockInfo] = useState<StockInfo | null>(null);
     const [realTimeData, setRealTimeData] = useState<Partial<CandleTypeWrapper<RealTimeDataByDay[], RealTimeDataByWeek[], RealTimeDataByWeek[]>>>({});
     const [timeInterval, setTimeInterval] = useState<CandleTypeWrapper<TimeIntervalType, TimeIntervalType, TimeIntervalType>>({
         day: { begin: today.minus({ days: 30 }).toJSDate(), end: today.toJSDate() },
@@ -100,7 +99,7 @@ const QuoteAnalysisView: React.FC<{
             (async () => {
                 setLoading(true);
                 try {
-                    setStockInfo(await client.getStockDetailedInfo(currentStock));
+                    // setStockInfo(await client.getStockDetailedInfo(currentStock));
                     await applyDate(false, candleType);
                     setLoaded(true);
                 } catch (e) {
@@ -173,7 +172,7 @@ const QuoteAnalysisView: React.FC<{
                 {!currentStock ? <div style={{ height: "500px" }}>
                 </div> : loaded && <div>
 
-                    <QuoteAnalysisStockDetail stockInfo={stockInfo!}></QuoteAnalysisStockDetail>
+                    {/* <QuoteAnalysisStockDetail stockInfo={stockInfo!}></QuoteAnalysisStockDetail> */}
                     <Segment>
                         <Dimmer active={stockLoading}>
                             <Loader>加载中...</Loader>

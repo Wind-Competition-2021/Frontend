@@ -2,8 +2,8 @@ import _ from "lodash";
 import { DateTime } from "luxon";
 import React, { useState } from "react";
 import { Accordion, Icon, Table } from "semantic-ui-react";
-import { StockInfo } from "../../../../client/types";
-import AnalysisInformationItem from "../AnalysisInformationItem";
+import { StockInfo } from "../../../client/types";
+import AnalysisInformationItem from "./AnalysisInformationItem";
 // import { showStockDetailModal } from "./StockDetailModal";
 
 function wrapWebsite(src: string | null): string | null {
@@ -17,7 +17,7 @@ function makeAbstract(src: string): string {
     return _.take(_.toArray(src), 50).join("");
 }
 
-const QuoteAnalysisStockDetail: React.FC<{ stockInfo: StockInfo }> = ({ stockInfo }) => {
+const StockDetailTable: React.FC<{ stockInfo: StockInfo }> = ({ stockInfo }) => {
     const [accordionStatus, setAccordionStatue] = useState<[boolean, boolean, boolean]>([false, false, false]);
     return <div>
         <Table celled>
@@ -70,4 +70,4 @@ const QuoteAnalysisStockDetail: React.FC<{ stockInfo: StockInfo }> = ({ stockInf
     </div>;
 };
 
-export default QuoteAnalysisStockDetail;
+export default StockDetailTable;

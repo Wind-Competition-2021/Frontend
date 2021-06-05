@@ -7,6 +7,7 @@ import ConfigView from "./tab/ConfigView";
 import StatementAnalysisView from "./tab/analysis/statement/StatementAnalysisView";
 import "./LinkButton.css";
 import "core-js/stable";
+import StockDetailView from "./tab/analysis/StockDetailView";
 // import StatementAnalysisView from "./tab/analysis/statement/StatementAnalysisView";
 
 
@@ -15,6 +16,7 @@ const MainView: React.FC<{}> = () => {
     const darkMode = useDarkModeValue();
     const panes = [
         { menuItem: "实时报价", render: () => <Tab.Pane style={{ backgroundColor: darkMode ? "black" : "white" }}><StockView></StockView></Tab.Pane> },
+        { menuItem: "股票详情", render: () => <Tab.Pane style={{ backgroundColor: darkMode ? "black" : "white" }}><StockDetailView></StockDetailView></Tab.Pane> },
         { menuItem: "行情分析", render: () => <Tab.Pane style={{ backgroundColor: darkMode ? "black" : "white" }}><QuoteAnalysisView></QuoteAnalysisView></Tab.Pane> },
         { menuItem: "财务报表", render: () => <Tab.Pane style={{ backgroundColor: darkMode ? "black" : "white" }}><StatementAnalysisView></StatementAnalysisView></Tab.Pane> },
         { menuItem: "设置", render: () => <Tab.Pane style={{ backgroundColor: darkMode ? "black" : "white" }}><ConfigView></ConfigView></Tab.Pane> },
