@@ -7,7 +7,7 @@ const AnalysisInformationItem: React.FC<{ title: React.ReactNode; colSpan?: numb
 }) => {
     return <>
         <Table.Cell textAlign={centered ? "center" : undefined} width={width} rowspan={rowSpan} className="my-table-header">{title}</Table.Cell>
-        {children && <Table.Cell colspan={colSpan}>{children}</Table.Cell>}
+        {children && <Table.Cell colspan={colSpan}>{children || ""}</Table.Cell>}
     </>
 };
 

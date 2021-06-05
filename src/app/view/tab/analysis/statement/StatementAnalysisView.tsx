@@ -104,6 +104,7 @@ const StatementAnalysisView: React.FC<{
                         ></AnalysisStockSearch>
                     </Grid.Column>
                     <Grid.Column>
+                        {!currentStock && <div style={{ height: "500px" }}></div>}
                         {currentStock && <Form>
                             <Form.Group>
                                 <><Form.Field inline>
@@ -112,7 +113,7 @@ const StatementAnalysisView: React.FC<{
                                         value={year}
                                         onChange={(_, d) => setYear(parseInt(d.value))}
                                     ></Input>
-                                    </Form.Field>
+                                </Form.Field>
                                     <Form.Field inline>
                                         <label>季度</label>
                                         <Button.Group>
@@ -141,24 +142,24 @@ const StatementAnalysisView: React.FC<{
                     </Grid.Column>
                 </Grid>
             </Grid.Column>
-            <Grid.Column >
-                {!currentStock ? <div></div> : <div>
-                    {fetching && <div style={{ height: "400px" }}>
-                        <Dimmer active>
-                            <Loader>加载中...</Loader>
-                        </Dimmer>
-                    </div>}
-                    {dataLoaded && !fetching && <SingleStatementTable
-                        // dateBundle={dateBundle!}
-                        quarterBundle={quarterBundle!}
-                    // type={currentTab}
-                    // dateFormat={currentTab}
-                    ></SingleStatementTable>
-                    }
-                </div>
-                }
 
-                {/* {!currentStock ? <div></div> : <div>
+            {!currentStock ? <div></div> : <Grid.Column > <div>
+                {fetching && <div style={{ height: "400px" }}>
+                    <Dimmer active>
+                        <Loader>加载中...</Loader>
+                    </Dimmer>
+                </div>}
+                {dataLoaded && !fetching && <SingleStatementTable
+                    // dateBundle={dateBundle!}
+                    quarterBundle={quarterBundle!}
+                // type={currentTab}
+                // dateFormat={currentTab}
+                ></SingleStatementTable>
+                }
+            </div> </Grid.Column>
+            }
+
+            {/* {!currentStock ? <div></div> : <div>
                     <Dimmer active={fetching}>
                         <Loader>加载中...</Loader>
                     </Dimmer>
@@ -191,7 +192,7 @@ const StatementAnalysisView: React.FC<{
                         </Grid.Column>
                     </Grid>
                 </div>} */}
-            </Grid.Column>
+
         </Grid>
     </div>;
 };

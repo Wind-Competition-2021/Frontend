@@ -6,7 +6,7 @@ import { StockList, StockListItem } from "../../../client/types";
 import { client } from "../../../client/WindClient";
 import { convertNumbers, unwrapNumber } from "../../../common/Util";
 import { useDarkModeValue } from "../../../state/Util";
-
+import "./StockListChart.css";
 /**
  * 渲染股票总信息上的一行
  * @param item 
@@ -89,7 +89,7 @@ const StockListChart: React.FC<{
             }
             className={darkMode ? "dark-mode" : ""}
         >
-            <Table fixed>
+            <Table fixed className="mobile-scroll" unstackable padded>
                 <Table.Header>
                     <Table.Row>
                         {["#", "股票代码", "股票名", "当前价格", "涨跌幅度", "最高价", "最低价", "成交量", "成交额", "置顶操作"].map((item, i) => (<Table.HeaderCell textAlign="right" key={i} width={i === 0 ? "1" : undefined}>{item}</Table.HeaderCell>))}

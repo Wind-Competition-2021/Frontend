@@ -34,6 +34,7 @@ const StockDetailView: React.FC<{}> = () => {
                 </Grid>
             </Grid.Column>
             <Grid.Column>
+                {!stockInfo && <div style={{ height: "500px" }}></div>}
                 {stockInfo && <StockDetailTable stockInfo={stockInfo}></StockDetailTable>}
             </Grid.Column>
         </Grid>

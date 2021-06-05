@@ -18,11 +18,11 @@ const ItemWrapper: React.FC<{ data: any, colSpan?: number, statement: StatementB
         {(() => {
             let val = data.mapper(statement);
             if (val === null) {
-                return "数据不存在";
+                return " ";
             } else
                 if (typeof val == "number") {
                     return `${(val as number).toFixed(2)}%`;
-                } else return val || "数据不存在" as string;
+                } else return val || " " as string;
         })()}
     </AnalysisInformationItem>
 };
@@ -46,10 +46,10 @@ const StatementTableView: React.FC<{
                 <AnalysisInformationItem title="股票代码" >
                     {generalData.id}
                 </AnalysisInformationItem>
-                <AnalysisInformationItem title="发布日期" colSpan={2}>
+                <AnalysisInformationItem title="发布日期" colSpan={1}>
                     {generalData.publishDate ? toDateString(DateTime.fromISO(generalData.publishDate).toJSDate()) : "数据不存在"}
                 </AnalysisInformationItem>
-                <AnalysisInformationItem title="截止日期" colSpan={2}>
+                <AnalysisInformationItem title="截止日期" colSpan={3}>
                     {generalData.statDeadline ? toDateString(DateTime.fromISO(generalData.statDeadline).toJSDate()) : "数据不存在"}
                 </AnalysisInformationItem>
             </Table.Row>
@@ -74,32 +74,29 @@ const StatementTableView: React.FC<{
                 <ItemWrapper colSpan={1} data={formats.operationalCapability.itd} statement={quarterBundle.operationalCapability} ></ItemWrapper>
             </Table.Row>
             <Table.Row>
-                <ItemWrapper colSpan={3} data={formats.operationalCapability.catr} statement={quarterBundle.operationalCapability} ></ItemWrapper>
-
-                <ItemWrapper colSpan={3} data={formats.operationalCapability.tatr} statement={quarterBundle.operationalCapability} ></ItemWrapper>
-
+                <ItemWrapper colSpan={1} data={formats.operationalCapability.catr} statement={quarterBundle.operationalCapability} ></ItemWrapper>
+                <ItemWrapper colSpan={5} data={formats.operationalCapability.tatr} statement={quarterBundle.operationalCapability} ></ItemWrapper>
             </Table.Row>
             <Table.Row>
                 <AnalysisInformationItem title="成长能力" rowSpan={2} children={undefined} />
-                <ItemWrapper colSpan={2} data={formats.growthAbility.nagr} statement={quarterBundle.growthAbility}></ItemWrapper>
-                <ItemWrapper colSpan={2} data={formats.growthAbility.tagr} statement={quarterBundle.growthAbility}></ItemWrapper>
-                <ItemWrapper colSpan={1} data={formats.growthAbility.npgr} statement={quarterBundle.growthAbility}></ItemWrapper>
+                <ItemWrapper colSpan={1} data={formats.growthAbility.nagr} statement={quarterBundle.growthAbility}></ItemWrapper>
+                <ItemWrapper colSpan={1} data={formats.growthAbility.tagr} statement={quarterBundle.growthAbility}></ItemWrapper>
+                <ItemWrapper colSpan={3} data={formats.growthAbility.npgr} statement={quarterBundle.growthAbility}></ItemWrapper>
             </Table.Row>
             <Table.Row>
-                <ItemWrapper colSpan={3} data={formats.growthAbility.bepsgr} statement={quarterBundle.growthAbility}></ItemWrapper>
-                <ItemWrapper colSpan={3} data={formats.growthAbility.npasgr} statement={quarterBundle.growthAbility}></ItemWrapper>
+                <ItemWrapper colSpan={1} data={formats.growthAbility.bepsgr} statement={quarterBundle.growthAbility}></ItemWrapper>
+                <ItemWrapper colSpan={5} data={formats.growthAbility.npasgr} statement={quarterBundle.growthAbility}></ItemWrapper>
             </Table.Row>
             <Table.Row>
                 <AnalysisInformationItem title="偿债能力" rowSpan={2} children={undefined} />
-                <ItemWrapper colSpan={2} data={formats.solvency.cr} statement={quarterBundle.solvency}></ItemWrapper>
-                <ItemWrapper colSpan={2} data={formats.solvency.qr} statement={quarterBundle.solvency}></ItemWrapper>
-                <ItemWrapper colSpan={1} data={formats.solvency.car} statement={quarterBundle.solvency}></ItemWrapper>
-
+                <ItemWrapper colSpan={1} data={formats.solvency.cr} statement={quarterBundle.solvency}></ItemWrapper>
+                <ItemWrapper colSpan={1} data={formats.solvency.qr} statement={quarterBundle.solvency}></ItemWrapper>
+                <ItemWrapper colSpan={3} data={formats.solvency.car} statement={quarterBundle.solvency}></ItemWrapper>
             </Table.Row>
             <Table.Row>
-                <ItemWrapper colSpan={2} data={formats.solvency.tlgr} statement={quarterBundle.solvency}></ItemWrapper>
-                <ItemWrapper colSpan={2} data={formats.solvency.dar} statement={quarterBundle.solvency}></ItemWrapper>
-                <ItemWrapper colSpan={1} data={formats.solvency.em} statement={quarterBundle.solvency}></ItemWrapper>
+                <ItemWrapper colSpan={1} data={formats.solvency.tlgr} statement={quarterBundle.solvency}></ItemWrapper>
+                <ItemWrapper colSpan={1} data={formats.solvency.dar} statement={quarterBundle.solvency}></ItemWrapper>
+                <ItemWrapper colSpan={3} data={formats.solvency.em} statement={quarterBundle.solvency}></ItemWrapper>
             </Table.Row>
             <Table.Row>
                 <AnalysisInformationItem title="现金流量" rowSpan={2} children={undefined} />
