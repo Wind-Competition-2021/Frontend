@@ -1,7 +1,7 @@
 import { toDateString, useDocumentTitle } from "../../../common/Util";
-import { Divider, Input, Grid, Dimmer, Placeholder, Loader, Form, Button } from "semantic-ui-react";
-import { client } from "../../../client/WindClient";
-import { Config, StockBasicInfo, StockList, StockListItem, StockTrendList } from "../../../client/types";
+import { Divider, Input, Grid, Dimmer, Placeholder, Loader, Button, Statistic, Modal, Form } from "semantic-ui-react";
+import { client, ReplayWrapper } from "../../../client/WindClient";
+import { StockBasicInfo, StockList, StockListItem, StockTrendList } from "../../../client/types";
 import { Layout } from "./StockViewLayout";
 import "./StockView.css"
 import _ from "lodash";
@@ -15,6 +15,8 @@ import { WrappedStockCandleChart } from "./StockCandleChart";
 import SingleStockTrendChart from "./SingleStockTrendChart";
 import { DateTime } from "luxon";
 import { useDarkMode } from "../../../state/Util";
+import ReplayConfigForm, { ReplayConfig } from "./ReplayConfigForm";
+
 import DayPickerInput from "react-day-picker/DayPickerInput";
 const stockListComparor = (x: StockListItem, y: StockListItem) => {
     if (x.pinned === y.pinned) return (y.closing - y.preClosing) / y.preClosing > (x.closing - x.preClosing) / x.preClosing ? 1 : -1;
@@ -40,68 +42,6 @@ function filterStockTrendList(input: StockTrendList): StockTrendList {
     }
     return result;
 }
-interface ReplayConfig {
-    start: Date;
-    end: Date;
-    // speed: number;
-}
-
-const ReplayConfigForm: React.FC<{ data: ReplayConfig; replaying: boolean; callback: (d: ReplayConfig) => void; stopCallback: () => void; }> = ({ callback, data, stopCallback, replaying }) => {
-    const [config, setConfig] = useState(data);
-    const [replaySpeed, setReplaySpeed] = useState(client.getLocalConfig()!.playbackSpeed);
-    const [speedModified, setSpeedModified] = useState(false);
-    const [loading, setLoading] = useState(false);
-    return <Form>
-        <Form.Group>
-            <Form.Field>
-                <label>开始日期</label>
-                <DayPickerInput dayPickerProps={{ className: "most-top" }} value={config.start} onDayChange={d => setConfig({ ...config, start: d })}></DayPickerInput>
-            </Form.Field>
-            <Form.Field >
-                <label>结束日期</label>
-                <DayPickerInput dayPickerProps={{ className: "most-top" }} value={config.end} onDayChange={d => setConfig({ ...config, end: d })}></DayPickerInput>
-            </Form.Field>
-            <Form.Field >
-                <label>回放速度</label>
-                <Input type="number" value={replaySpeed} onChange={e => {
-                    setReplaySpeed(parseInt(e.target.value));
-                    setSpeedModified(true);
-                }}></Input>
-            </Form.Field>
-            <Form.Field >
-                <label>操作</label>
-                <Button.Group>
-                    {!replaying && <Button loading={loading} color="green" size="tiny" onClick={() => {
-                        (async () => {
-                            if (speedModified) {
-                                setLoading(true);
-                                try {
-                                    const newConfig: Config = { ...client.getLocalConfig()!, playbackSpeed: replaySpeed };
-                                    await client.updateRemoteConfig(newConfig);
-                                    client.setLocalConfig(newConfig);
-                                    setLoading(false);
-                                    callback(config);
-                                } catch (e) {
-                                    throw e;
-                                } finally {
-                                    setLoading(false);
-                                }
-                            } else {
-                                callback(config);
-                            }
-                        })();
-                    }}>
-                        开始重放
-                    </Button>}
-                    {replaying && <Button color="red" size="tiny" onClick={stopCallback}>
-                        停止重放
-                    </Button>}
-                </Button.Group>
-
-            </Form.Field>
-        </Form.Group>
-    </Form>;
-};
 
 const StockView: React.FC<{}> = () => {
     useDocumentTitle("实时报价");
@@ -144,6 +84,8 @@ const StockView: React.FC<{}> = () => {
      */
     // const nowCouldReplay = !inTradeTime;
     const [nowCouldReplay, setNowCouldReplay] = useState(false);
+    // const [stockListReplayingTime, setReplayingTime] = useState<DateTime | null>(null);
+    const [replayingTime, setReplayingTime] = useState<{ stockList?: DateTime; trendList?: DateTime } | null>({});
     /**
      * 回放设置
      */
@@ -151,6 +93,7 @@ const StockView: React.FC<{}> = () => {
         start: today.minus({ day: 1 }).toJSDate(),
         end: today.minus({ day: 1 }).toJSDate()
     });
+    const [showInitReplayModal, setShowInitReplayModal] = useState(false);
     /**
      * 页面加载完成，添加一个总的接受股票列表更新的监听器
      */
@@ -158,19 +101,37 @@ const StockView: React.FC<{}> = () => {
         if (inTradeTime || replayRunning) {
             console.log("Connecting stock list socket..");
             setStockListSocketLoaded(false);
-            if (replaying)
+            let replayID: string | null = null;
+            if (replaying) {
                 client.connectStockListSocket("replay", toDateString(replayConfig.start), toDateString(replayConfig.end));
+                replayID = client.addReplayFinishCallback(() => setReplayRunning(false));
+            }
             else client.connectStockListSocket("realtime");
 
             const token = client.addStockListUpdateListener((val) => {
-                val.sort(stockListComparor);
-                setStockList(val);
+                if (replaying) {
+                    const replayVal = (val as ReplayWrapper<StockList>).quotes;
+                    setReplayingTime(c => ({
+                        ...c,
+                        stockList: DateTime.fromISO((val as ReplayWrapper<StockList>).time)
+                    }));
+                    replayVal.sort(stockListComparor);
+                    setStockList(replayVal);
+                } else {
+                    const realtimeVal = val as StockList;
+                    realtimeVal.sort(stockListComparor);
+                    setStockList(realtimeVal);
+                }
+
                 setStockListSocketLoaded(true);
             });
             // setCurrentStock(null);
             return () => {
                 client.removeStockListUpdateListener(token);
                 client.disconnectStockListSocket();
+                if (replayID) {
+                    client.removeReplayFinishedCallback(replayID);
+                }
             };
         }
     }, [nowShouldWork, replayConfig, replayRunning, inTradeTime, replaying]);
@@ -189,7 +150,20 @@ const StockView: React.FC<{}> = () => {
             console.log("Connecting single socket:", currentStock);
             const token = client.addSingleStockTrendUpdateListener(val => {
                 console.log("single update", val);
-                setStockTrendList(s => _.takeRight(filterStockTrendList([...(s || []), ...val]), 90));
+                if (replaying) {
+                    const replayVal = (val as ReplayWrapper<StockTrendList>);
+                    setReplayingTime(c => ({
+                        ...c,
+                        trendList: DateTime.fromISO((val as ReplayWrapper<StockTrendList>).time)
+                    }));
+                    if (replayVal.quotes.length > 0)
+                        setStockTrendList(s => _.takeRight(filterStockTrendList([...(s || []), ...replayVal.quotes]), 90));
+                } else {
+                    const realtimeVal = val as StockTrendList;
+                    if (realtimeVal.length > 0)
+                        setStockTrendList(s => _.takeRight(filterStockTrendList([...(s || []), ...realtimeVal]), 90));
+                }
+
                 setSingleListLoading(false);
             });
 
@@ -215,15 +189,15 @@ const StockView: React.FC<{}> = () => {
             } : {}}
         >
             <Dimmer active={!inTradeTime && !nowCouldReplay}>
-                <div>当前不在交易时间，实时行情已停用。您可以 <Button size="tiny" color="black" onClick={() => setNowCouldReplay(true)}>重放</Button></div>
+                <div>当前不在交易时间，实时行情已停用。您可以 <Button size="tiny" color="black" onClick={() => setShowInitReplayModal(true)}>重放</Button></div>
             </Dimmer>
             <Dimmer active={!stockListSocketLoaded && nowShouldWork}>
                 <Loader>建立连接中...</Loader>
             </Dimmer>
 
             <div >
-                <Grid columns="2" >
-                    {(!(nowCouldReplay && !replaying)) && <Grid.Column width="5">
+                <Grid doubling stackable columns="3">
+                    {(!(nowCouldReplay && !replaying)) && <Grid.Column width="4">
                         <Input className={darkMode ? "dark-mode" : ""} action={{
                             labelPosition: "right",
                             icon: "search",
@@ -238,24 +212,32 @@ const StockView: React.FC<{}> = () => {
                         }}>
                         </input>}></Input>
                     </Grid.Column>}
-                    <Grid.Column width="11">
-                        {nowCouldReplay && <ReplayConfigForm replaying={replayRunning} data={replayConfig} callback={cfg => {
-                            setReplayConfig(cfg);
-                            setReplaying(true);
-                            setReplayRunning(true);
-                            setStockListSocketLoaded(false);
-                            // setSingleListLoading()
-                        }} stopCallback={() => {
-                            client.disconnectSingleStockSocket();
-                            client.disconnectStockListSocket();
-                            setReplayRunning(false);
-                        }}></ReplayConfigForm>}
+                    <Grid.Column width="8" >
+                        <Grid columns="2" centered>
+                            <Grid.Column>{replayRunning && <Statistic size="tiny" horizontal>
+                                <Statistic.Value>{replayingTime!.stockList?.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS)}</Statistic.Value>
+                                {/* <Statistic.Label>模拟时间</Statistic.Label> */}
+                            </Statistic>}</Grid.Column>
+                        </Grid>
                     </Grid.Column>
-                    {/* <Grid.Column >
-                        <Checkbox className={darkMode ? "dark-mode" : ""} toggle checked={darkMode} onChange={(_, d) => setDarkMode(d.checked!)} label="暗色模式"></Checkbox>
-                    </Grid.Column> */}
+                    <Grid.Column width="4">
+                        <Grid columns="2" >
+                            <Grid.Column width="16"> {nowCouldReplay && <ReplayConfigForm replaying={replayRunning} data={replayConfig} callback={cfg => {
+                                setReplayConfig(cfg);
+                                setReplaying(true);
+                                setReplayRunning(true);
+                                setStockListSocketLoaded(false);
+                                // setSingleListLoading()
+                            }} stopCallback={() => {
+                                client.disconnectSingleStockSocket();
+                                client.disconnectStockListSocket();
+                                setReplayRunning(false);
+                            }}></ReplayConfigForm>}</Grid.Column>
+                        </Grid>
+                    </Grid.Column>
                 </Grid>
             </div>
+
             <Divider></Divider>
             <div>
                 <Grid columns="1">
@@ -284,9 +266,10 @@ const StockView: React.FC<{}> = () => {
                                         </div>
                                     }
                                     if (nowShouldWork) {
-                                        return stockTrendList ? <SingleStockTrendChart
+                                        return stockTrendList ? <div><SingleStockTrendChart
                                             data={stockTrendList}
-                                        ></SingleStockTrendChart> : <div></div>;
+                                        ></SingleStockTrendChart>
+                                        </div> : <div></div>;
                                     } else {
                                         return <Placeholder>
                                             {_.times(10, (i) => <Placeholder.Line key={i}></Placeholder.Line>)}
@@ -330,6 +313,35 @@ const StockView: React.FC<{}> = () => {
             setShowingSearchModal={setShowingSearchModal}
             showingSearchModal={showingSearchModal}
         ></StockViewSearchModal>
+        <Modal size="mini" open={showInitReplayModal}>
+            <Modal.Header>时间选择</Modal.Header>
+            <Modal.Content>
+                <Form>
+                    <Form.Field>
+                        <label>开始日期</label>
+                        <DayPickerInput dayPickerProps={{ className: "most-top" }} value={replayConfig.start} onDayChange={d => setReplayConfig(c => ({ ...c, start: d }))}></DayPickerInput>
+                    </Form.Field>
+                    <Form.Field>
+                        <label>结束日期</label>
+                        <DayPickerInput dayPickerProps={{ className: "most-top" }} value={replayConfig.end} onDayChange={d => setReplayConfig(c => ({ ...c, end: d }))}></DayPickerInput>
+                    </Form.Field>
+                </Form>
+            </Modal.Content>
+            <Modal.Actions>
+                <Button color="red" onClick={() => setShowInitReplayModal(false)}>
+                    取消
+                </Button>
+                <Button color="blue" onClick={() => {
+                    setShowInitReplayModal(false);
+                    setReplaying(true);
+                    setReplayRunning(true);
+                    setNowCouldReplay(true);
+                    setStockListSocketLoaded(false);
+                }}>
+                    开始
+                </Button>
+            </Modal.Actions>
+        </Modal>
     </>
 };
 

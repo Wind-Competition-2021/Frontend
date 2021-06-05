@@ -150,10 +150,27 @@ type ExtraCandleChartData = ExtraCandleChartItem[];
 
 type StockListFetchType = "sz50" | "hs300" | "zz500" | "index" | "stock" | "default" | "all";
 
+interface WebSocketPacket {
+    type: "init" | "ctrl";
+    content: any;
+}
+interface InitWebSocketPacket extends WebSocketPacket {
+    type: "init";
+    content: string[];
+}
+interface ControlWebSocketPacket extends WebSocketPacket {
+    type: "ctrl";
+    content: "stop" | "resume";
+}
+type WebSocketPacketBundle = InitWebSocketPacket | ControlWebSocketPacket;
 export type {
     Config,
     StockTrendItem,
     StockTrendList,
+    WebSocketPacket,
+    InitWebSocketPacket,
+    ControlWebSocketPacket,
+    WebSocketPacketBundle,
     // PriceSummaryList,
     // PriceSummaryItem,
     StockList,

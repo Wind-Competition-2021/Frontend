@@ -1,0 +1,11 @@
+.my-table-header {
+    background: #f9fafb;
+    padding: .92857143em .78571429em;
+    color:rgba(0,0,0,.87);
+    border-bottom: 1px solid rgba(34,36,38,.1);
+    border-left: none;
+    font-weight: 700;
+    vertical-align: inherit;
+    text-align: inherit;
+    cursor: auto;
+}

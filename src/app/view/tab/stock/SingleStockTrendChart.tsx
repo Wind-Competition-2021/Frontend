@@ -18,7 +18,7 @@ const SingleStockTrendChart: React.FC<{
     const priceData = data.map(item => myUnwrapNumber(item.closing, true));
 
     // const maxVolume = _.max(data.map(t => t.volume)) as number;
-    const timeList = data.map((item) => DateTime.fromISO(item.time).toFormat("HH:mm"));
+    const timeList = data.map((item) => DateTime.fromISO(item.time).plus({ hour: 8 }).toFormat("HH:mm"));
     const maxPrice = _.max(priceData.map(i => i.value))!;
     const minPrice = _.min(priceData.map(i => i.value))!;
     const halfLen = (maxPrice - minPrice) / 2;

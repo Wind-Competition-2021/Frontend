@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
-import { Grid, Form, Dimmer, Loader,  Menu, Segment } from "semantic-ui-react";
+import { Grid, Form, Dimmer, Loader, Menu, Segment } from "semantic-ui-react";
 import { RealTimeDataByDay, RealTimeDataByWeek, RehabilitationType, StockInfo } from "../../../../client/types";
 import { client } from "../../../../client/WindClient";
 import { checkValidDateRange, isFutureDate, toDateString, useDocumentTitle } from "../../../../common/Util";
@@ -11,7 +11,7 @@ import DayPickerInput from "react-day-picker/DayPickerInput"
 import QuoteAnalysisStockDetail from "./QuoteAnalysisStockDetail";
 // import QuoteAnalysisStockChart from "./QuoteAnalysisStockChart";
 import { showErrorModal } from "../../../../dialogs/Dialog";
-import {StockCandleChart} from "../../stock/StockCandleChart";
+import { StockCandleChart } from "../../stock/StockCandleChart";
 
 type CandleChartType = "day" | "week" | "month";
 type TimeIntervalType = { begin: Date; end: Date };
@@ -147,7 +147,7 @@ const QuoteAnalysisView: React.FC<{
                     </Grid.Column>
                     <Grid.Column>
                         {currentStock && <Form>
-                            <Form.Group inline>
+                            <Form.Group inline style={{ justifyContent: "flex-end" }}>
                                 <label>复权类型</label>
                                 <Form.Radio
                                     label="前复权"
@@ -179,7 +179,7 @@ const QuoteAnalysisView: React.FC<{
                             <Loader>加载中...</Loader>
                         </Dimmer>
                         <Grid columns="2">
-                            <Grid.Column width="4">
+                            <Grid.Column width="2">
                                 <Menu fluid vertical tabular>
                                     <Menu.Item
                                         name="日K线数据"
@@ -198,7 +198,7 @@ const QuoteAnalysisView: React.FC<{
                                     ></Menu.Item>
                                 </Menu>
                             </Grid.Column>
-                            <Grid.Column stretched width="12">
+                            <Grid.Column stretched width="14">
                                 <Segment>
                                     <Grid columns="1">
                                         <Grid.Column>

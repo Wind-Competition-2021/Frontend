@@ -33,7 +33,8 @@ const StockListChart: React.FC<{
                 }} style={{ cursor: "pointer" }}>
                     {[
                         <>
-                            {item.pinned && <Icon name="thumb tack"></Icon>}{i + 1}
+                            {/* {item.pinned ? <Icon name="thumb tack"></Icon> : <Icon name="thumb tack" rotated="clockwise"></Icon>} */}
+                            {i + 1}
                         </>,
                         item.id,
                         client.getStockBasicInfoByID(item.id)!.name,
@@ -45,21 +46,25 @@ const StockListChart: React.FC<{
                         // convertNumbers(, true),
                         (item.turnover / 10000 / 10000).toFixed(2) + "万元",
                         <div>
-                            {item.pinned ? <Button size="tiny" color="red" onClick={async () => {
+                            {item.pinned ? <Button icon size="tiny" color="red" onClick={async () => {
                                 const config = client.getLocalConfig()!;
                                 config.pinnedStocks = config.pinnedStocks.filter(t => t !== item.id);
 
                                 await client.updateConfig(config);
                                 refreshPinnedStocks();
                             }}>
-                                取消置顶</Button> : <Button size="tiny" color="green" onClick={async () => {
-                                    const config = client.getLocalConfig()!;
-                                    config.pinnedStocks.push(item.id);
+                                {/* 取消置顶 */}
+                                <Icon name="thumb tack"></Icon>
+                            </Button> : <Button icon size="tiny" color="green" onClick={async () => {
+                                const config = client.getLocalConfig()!;
+                                config.pinnedStocks.push(item.id);
 
-                                    await client.updateConfig(config);
-                                    refreshPinnedStocks();
-                                }}>
-                                添加置顶</Button>}
+                                await client.updateConfig(config);
+                                refreshPinnedStocks();
+                            }}>
+                                <Icon name="thumb tack" rotated="clockwise"></Icon>
+                                {/* 添加置顶 */}
+                            </Button>}
                         </div>].map((itemx, j) => {
                             if (j !== 4) {
                                 return <Table.Cell
@@ -84,10 +89,10 @@ const StockListChart: React.FC<{
             }
             className={darkMode ? "dark-mode" : ""}
         >
-            <Table>
+            <Table fixed>
                 <Table.Header>
                     <Table.Row>
-                        {["#", "股票代码", "股票名", "当前价格", "涨跌幅度", "最高价", "最低价", "成交量", "成交额", "置顶操作"].map((item, i) => (<Table.HeaderCell textAlign="right" key={i}>{item}</Table.HeaderCell>))}
+                        {["#", "股票代码", "股票名", "当前价格", "涨跌幅度", "最高价", "最低价", "成交量", "成交额", "置顶操作"].map((item, i) => (<Table.HeaderCell textAlign="right" key={i} width={i === 0 ? "1" : undefined}>{item}</Table.HeaderCell>))}
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>

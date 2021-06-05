@@ -49,23 +49,23 @@ interface CashFlow extends StatementBase {
 // interface Dupond extends StatementBase {
 
 // };
-interface PerformanceReport extends StatementBase {
-    updateDate: string;
-    ta: number;
-    na: number;
-    epsgr: number;
-    roew: number;
-    epsd: number;
-    grgr: number;
-    opgr: number;
-};
-interface PerformanceForcast extends StatementBase {
-    type: string;
-    abstract: string;
-    npasgrUpperLimit: number;
-    npasgrLowerLimit: number;
+// interface PerformanceReport extends StatementBase {
+//     updateDate: string;
+//     ta: number;
+//     na: number;
+//     epsgr: number;
+//     roew: number;
+//     epsd: number;
+//     grgr: number;
+//     opgr: number;
+// };
+// interface PerformanceForcast extends StatementBase {
+//     type: string;
+//     abstract: string;
+//     npasgrUpperLimit: number;
+//     npasgrLowerLimit: number;
 
-};
+// };
 interface QuarterDataBundle {
     profitability: Profitability;
     operationalCapability: OperationalCapability;
@@ -75,12 +75,12 @@ interface QuarterDataBundle {
     // dupond: Dupond;
 };
 
-interface DateIntervalDataBundle {
-    performanceReport?: PerformanceReport;
-    performanceForcast?: PerformanceForcast;
-};
-type AllBundle = QuarterDataBundle & Required<DateIntervalDataBundle>;
-type StatementType = keyof QuarterDataBundle | keyof DateIntervalDataBundle;
+// interface DateIntervalDataBundle {
+//     performanceReport?: PerformanceReport;
+//     performanceForcast?: PerformanceForcast;
+// };
+type AllBundle = QuarterDataBundle ;
+type StatementType = keyof QuarterDataBundle ;
 type Quarter = 1 | 2 | 3 | 4;
 
 type DateFormat = "date" | "quarter";
@@ -89,7 +89,7 @@ const dateFormatMapping = {
     quarter: "季频数据"
 } as Record<DateFormat, string>;
 const dateFormatSequence: DateFormat[] = ["quarter", "date"];
-const typeSequence: StatementType[] = ["profitability", "operationalCapability", "growthAbility", "solvency", "cashFlow", "performanceReport", "performanceForcast"]
+const typeSequence: StatementType[] = ["profitability", "operationalCapability", "growthAbility", "solvency", "cashFlow"]
 const typeMapping = {
     performanceReport: { format: "date", title: "季频业绩快报" },
     performanceForcast: { format: "date", title: "季频业绩预告" },
@@ -103,14 +103,14 @@ const typeMapping = {
 export type {
     Solvency,
     CashFlow,
-    DateIntervalDataBundle,
+    // DateIntervalDataBundle,
     // Dupond,
-    PerformanceForcast,
+    // PerformanceForcast,
     GrowthAbility,
     OperationalCapability,
     Profitability,
     QuarterDataBundle,
-    PerformanceReport,
+    // PerformanceReport,
     StatementBase,
     StatementType,
     Quarter,

@@ -1,11 +1,11 @@
 import axios from "axios";
 import { BACKEND_BASE_URL } from "../App";
-import { showErrorModal, showSuccessModal } from "../dialogs/Dialog";
-import { Config, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockListFetchType, StockTrendList } from "./types";
+import { showErrorModal } from "../dialogs/Dialog";
+import { Config, ControlWebSocketPacket, InitWebSocketPacket, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockListFetchType, StockTrendList } from "./types";
 import { v4 as uuidv4 } from "uuid";
-import { CashFlow, DateIntervalDataBundle, PerformanceForcast, GrowthAbility, OperationalCapability, Profitability, QuarterDataBundle, PerformanceReport, Solvency } from "./statement-types";
+import { CashFlow,GrowthAbility, OperationalCapability, Profitability, QuarterDataBundle,  Solvency } from "./statement-types";
 import { makeStockStateUpdateAction, store } from "../state/Manager";
-import _ from "lodash";
+import { showSuccessPopup } from "../dialogs/Util";
 // import _ from "lodash";
 const axiosErrorHandler = (err: any) => {
     let resp = err.response;
@@ -19,16 +19,22 @@ const axiosErrorHandler = (err: any) => {
     throw err;
 };
 type DataUpdateHandler<T> = (data: T) => void;
-type StockListUpdateHandler = DataUpdateHandler<StockList>;
-type SingleStockTrendUpdateHandler = DataUpdateHandler<StockTrendList>;
+export interface ReplayWrapper<T> {
+    time: string;
+    quotes: T;
+}
+type StockListUpdateHandler = DataUpdateHandler<StockList | ReplayWrapper<StockList>>;
+type SingleStockTrendUpdateHandler = DataUpdateHandler<StockTrendList | ReplayWrapper<StockTrendList>>;
 
-
+type ReplayFinishedCallback = () => void;
 class WindClient {
 
     private token: string | null = null;
     private config: Config | null = null;
     private stockListUpdateHandlers = new Map<string, StockListUpdateHandler>();
     private singleStockTrendUpdateHandlers = new Map<string, SingleStockTrendUpdateHandler>();
+    private replayFinishedCallbacks = new Map<string, ReplayFinishedCallback>();
+
     private stockByID = new Map<String, StockBasicInfo>();
     private fullStockList: StockBasicInfoList | null = null;
     private simpleStockList: StockBasicInfoList | null = null;
@@ -116,6 +122,19 @@ class WindClient {
     public removeSingleStockTrendUpdateListener(id: string) {
         if (this.singleStockTrendUpdateHandlers.has(id)) this.singleStockTrendUpdateHandlers.delete(id);
     }
+    public addReplayFinishCallback(f: ReplayFinishedCallback): string {
+        const id = uuidv4();
+        this.replayFinishedCallbacks.set(id, f);
+        return id;
+    }
+    public sendReplayControlPacket(action: "resume" | "stop") {
+        if (this.stockListSocket) {
+            this.stockListSocket.send(JSON.stringify({ content: action, type: "ctrl" } as ControlWebSocketPacket))
+        }
+    }
+    public removeReplayFinishedCallback(id: string): void {
+        if (this.replayFinishedCallbacks.has(id)) this.replayFinishedCallbacks.delete(id);
+    }
     /**
      * Load configuration from the browser's localStorage, and get some basic stuff from the server.
      * It will also obtain new configuration if that in the browser is invalid.
@@ -200,7 +219,10 @@ class WindClient {
             this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/playback/list?token=${this.token!}&begin=${beginDate!}&end=${endDate!}`);
         }
         this.stockListSocket.onopen = () => {
-            this.stockListSocket!.send(JSON.stringify(this.simpleStockList!.map(item => item.id)));
+            this.stockListSocket!.send(JSON.stringify({
+                type: "init",
+                content: this.simpleStockList!.map(item => item.id)
+            } as InitWebSocketPacket));
             if (type === "replay") {
                 store.dispatch(makeStockStateUpdateAction({ tradingTime: store.getState().stockState.tradingTime, errorFetchingTradingTime: false, replaying: true }));
             }
@@ -213,8 +235,10 @@ class WindClient {
                 showErrorModal("股票列表已经停止刷新，这可能是因为当前超过了交易时间。");
                 store.dispatch(makeStockStateUpdateAction({ tradingTime: store.getState().stockState.tradingTime, errorFetchingTradingTime: false, replaying: false }));
             } else if (ev.code === 1000 && ev.reason === "Playback Finished") {
-                showSuccessModal("回放结束");
+                // showSuccessModal("回放结束");
+                showSuccessPopup("回放结束");
                 store.dispatch(makeStockStateUpdateAction({ tradingTime: store.getState().stockState.tradingTime, errorFetchingTradingTime: false, replaying: false }));
+                this.replayFinishedCallbacks.forEach(x => x());
             } else if (ev.code !== 1000) {
                 showErrorModal(`WebSocket连接已断开: ${ev.code} - ${ev.reason}`)
             }
@@ -425,16 +449,16 @@ class WindClient {
      * @param endDate end date, in format of `yyyy-mm-dd`
      * @returns 
      */
-    public async getDateIntervalStockStatement(id: string, beginDate?: string, endDate?: string): Promise<DateIntervalDataBundle> {
-        const wrapURL = (s: string) => `/api/statement/${s}`;
-        let resp = (await axios.all([
-            "report", "forecast"
-        ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, "begin": beginDate, "end": endDate } })))).map(i => i.data) as [PerformanceReport[], PerformanceForcast[]];
-        return {
-            performanceReport: _.last(resp[0]),
-            performanceForcast: _.last(resp[1])
-        };
-    }
+    // public async getDateIntervalStockStatement(id: string, beginDate?: string, endDate?: string): Promise<DateIntervalDataBundle> {
+    //     const wrapURL = (s: string) => `/api/statement/${s}`;
+    //     let resp = (await axios.all([
+    //         "report", "forecast"
+    //     ].map(item => this.vanillaClient.get(wrapURL(item), { params: { id: id, "begin": beginDate, "end": endDate } })))).map(i => i.data) as [PerformanceReport[], PerformanceForcast[]];
+    //     return {
+    //         performanceReport: _.last(resp[0]),
+    //         performanceForcast: _.last(resp[1])
+    //     };
+    // }
     public async getTradeStatus(date?: string): Promise<boolean> {
         return (await this.vanillaClient.get("/api/quote/trade-status", { params: { date: date } })).data as boolean;
     }

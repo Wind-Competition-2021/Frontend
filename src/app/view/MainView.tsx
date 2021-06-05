@@ -15,7 +15,7 @@ const MainView: React.FC<{}> = () => {
     const panes = [
         { menuItem: "实时报价", render: () => <Tab.Pane style={{ backgroundColor: darkMode ? "black" : "white" }}><StockView></StockView></Tab.Pane> },
         { menuItem: "行情分析", render: () => <Tab.Pane style={{ backgroundColor: darkMode ? "black" : "white" }}><QuoteAnalysisView></QuoteAnalysisView></Tab.Pane> },
-        { menuItem: "财务报表分析", render: () => <Tab.Pane style={{ backgroundColor: darkMode ? "black" : "white" }}><StatementAnalysisView></StatementAnalysisView></Tab.Pane> },
+        { menuItem: "财务报表", render: () => <Tab.Pane style={{ backgroundColor: darkMode ? "black" : "white" }}><StatementAnalysisView></StatementAnalysisView></Tab.Pane> },
         { menuItem: "设置", render: () => <Tab.Pane style={{ backgroundColor: darkMode ? "black" : "white" }}><ConfigView></ConfigView></Tab.Pane> },
     ]
     return loaded ? <div style={{ marginTop: "50px" }}>
