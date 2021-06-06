@@ -3,7 +3,7 @@ import { BACKEND_BASE_URL } from "../App";
 import { showErrorModal } from "../dialogs/Dialog";
 import { Config, ControlWebSocketPacket, InitWebSocketPacket, RealTimeDataByDay, RealTimeDataByMinute, RealTimeDataByWeek, RehabilitationType, StockBasicInfo, StockBasicInfoList, StockInfo, StockList, StockListFetchType, StockTrendList } from "./types";
 import { v4 as uuidv4 } from "uuid";
-import { CashFlow,GrowthAbility, OperationalCapability, Profitability, QuarterDataBundle,  Solvency } from "./statement-types";
+import { CashFlow, GrowthAbility, OperationalCapability, Profitability, QuarterDataBundle, Solvency } from "./statement-types";
 import { makeStockStateUpdateAction, store } from "../state/Manager";
 import { showSuccessPopup } from "../dialogs/Util";
 // import _ from "lodash";
@@ -214,9 +214,10 @@ class WindClient {
             this.stockListSocket.close();
         }
         if (type === "realtime") {
-            this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/realtime/list?token=${this.token!}`);
+
+            this.stockListSocket = new WebSocket(`${window.location.protocol.startsWith("https") ? "wss" : "ws"}://${window.location.hostname}:${window.location.port}/api/quote/realtime/list?token=${this.token!}`);
         } else {
-            this.stockListSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/playback/list?token=${this.token!}&begin=${beginDate!}&end=${endDate!}`);
+            this.stockListSocket = new WebSocket(`${window.location.protocol.startsWith("https") ? "wss" : "ws"}://${window.location.hostname}:${window.location.port}/api/quote/playback/list?token=${this.token!}&begin=${beginDate!}&end=${endDate!}`);
         }
         this.stockListSocket.onopen = () => {
             this.stockListSocket!.send(JSON.stringify({
@@ -254,9 +255,9 @@ class WindClient {
         }
 
         if (type === "realtime") {
-            this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/realtime/trend?token=${this.token!}&id=${stock_id}`);
+            this.singleStockSocket = new WebSocket(`${window.location.protocol.startsWith("https") ? "wss" : "ws"}://${window.location.hostname}:${window.location.port}/api/quote/realtime/trend?token=${this.token!}&id=${stock_id}`);
         } else {
-            this.singleStockSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/quote/playback/trend?token=${this.token!}&id=${stock_id}&begin=${beginDate}&end=${endDate}`);
+            this.singleStockSocket = new WebSocket(`${window.location.protocol.startsWith("https") ? "wss" : "ws"}://${window.location.hostname}:${window.location.port}/api/quote/playback/trend?token=${this.token!}&id=${stock_id}&begin=${beginDate}&end=${endDate}`);
         }
         console.log(this.singleStockSocket);
         console.log("Single socket to", stock_id, "created");
