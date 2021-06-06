@@ -115,8 +115,8 @@ const StockView: React.FC<{}> = () => {
                         const map = new Map<string, StockList[0]>();
                         l.forEach(x => map.set(x.id, x));
                         list.forEach(x => {
-                            x.lowest = Math.min(x.lowest, map.get(x.id)!.lowest);
-                            x.highest = Math.max(x.highest, map.get(x.id)!.highest);
+                            x.lowest = Math.min(x.lowest, map.get(x.id)?.lowest || Number.MAX_SAFE_INTEGER);
+                            x.highest = Math.max(x.highest, map.get(x.id)?.highest || Number.MIN_SAFE_INTEGER);
                         })
                         return list;
                     });
