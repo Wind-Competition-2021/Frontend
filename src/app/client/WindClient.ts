@@ -234,7 +234,7 @@ class WindClient {
         this.stockListSocket.onclose = ev => {
             if (ev.code === 1000 && ev.reason === "Trade Off") {
                 showErrorModal("股票列表已经停止刷新，这可能是因为当前超过了交易时间。");
-                store.dispatch(makeStockStateUpdateAction({ tradingTime: store.getState().stockState.tradingTime, errorFetchingTradingTime: false, replaying: false }));
+                store.dispatch(makeStockStateUpdateAction({ tradingTime: false, errorFetchingTradingTime: false, replaying: false }));
             } else if (ev.code === 1000 && ev.reason === "Playback Finished") {
                 // showSuccessModal("回放结束");
                 showSuccessPopup("回放结束");
